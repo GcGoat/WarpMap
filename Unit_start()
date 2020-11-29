@@ -1,4 +1,45 @@
 
+backGroundColor = "2C3735" --export: Defines main background color. Default: 2C3735
+backGroundColor = "#"..backGroundColor
+
+pathColor = "5c58b6" --export: Defines travel path line color. Default: 5c58b6
+pathColor = "#"..pathColor
+
+planetOffsetColor = "D7F4FA" --export: Defines planet offset color. Default: D7F4FA
+planetOffsetColor = "#"..planetOffsetColor
+
+buttonBorderColor = "dfdfdf" --export: Defines button border color. Default: dfdfdf
+buttonBorderColor = "#"..buttonBorderColor
+
+buttonBInactiveColor = "4B4B4B" --export: Defines inactive button background color. Default: 4B4B4B
+buttonBInactiveColor = "#"..buttonBInactiveColor
+
+buttonTInactiveColor = "d2d1d1" --export: Defines inactive button text color. Default: d2d1d1
+buttonTInactiveColor = "#"..buttonTInactiveColor
+
+buttonBActiveColor = "c5c5c5" --export: Defines inactive button background color. Default: c5c5c5
+buttonBActiveColor = "#"..buttonBActiveColor
+
+buttonTActiveColor = "515151" --export: Defines active button text color. Default: 515151
+buttonTActiveColor = "#"..buttonTActiveColor
+
+buttonTWarpInactiveColor = "D0AF40" --export: Defines set warp planet color. Default: D0AF40
+buttonTWarpInactiveColor = "#"..buttonTWarpInactiveColor
+buttonTWarpActiveColor = "756326" --export: Defines set warp active planet color. Default: 756326
+buttonTWarpActiveColor = "#"..buttonTWarpActiveColor
+
+mapCircleColor = "00eaff" --export: Defines circle front color. Default: 00eaff
+mapCircleColor = "#"..mapCircleColor
+mapBCircleColor = "ffffff" --export: Defines circle back color. Default: ffffff
+mapBCircleColor = "#"..mapBCircleColor
+
+mapConstructColor = "24ff00" --export: Defines current position color. Default: 24ff00
+mapConstructColor = "#"..mapConstructColor
+mapConstructSColor = "404040" --export: Defines current position stroke color. Default: 404040
+mapConstructSColor = "#"..mapConstructSColor
+
+zoomScale = 1.5 --export: Defines map scale in full screen mode. Default: 1.5
+
 weightButtonWidth = 80
 
 buttonHeight = 40
@@ -12,15 +53,11 @@ screenWidth = 1024
 
 radarScale = 110
 radarFullScreenScale = 50
- 
+
 screens = {}
 databank = nill
 warpdrive = nill
 core = nill
-
-lineColor = "#5c58b6"
-lineColorZero = "#D7F4FA"
-lineColorPlanet = "#a6a5b8"
 
 warpDriveDestinationPlanet = nill
 
@@ -176,6 +213,7 @@ function addPlanetButton(planet, buttonX, buttonY)
   button = {id = #planets + 1, planet = planet, name = formatPlanetName(planet), x=buttonX, y=buttonY}
   planet.button = button
   planet.mapCoords = {x = mapX(planet),y = mapY(planet), z = mapZ(planet)}
+  planet.fullname = planet.name
   table.insert(planets, planet)
 end
 
@@ -264,6 +302,7 @@ for i, planet in ipairs(planets) do
       moon.button = button
       moon.sourcePlanet = planet
       moon.mapCoords = {x = mapX(moon),y = mapY(moon), z = mapZ(moon)}
+      moon.fullname = planet.fullname.." "..moon.name
       shift = shift + 1
     end
   end
@@ -410,15 +449,10 @@ end
 updateCounter = 30
 
 function update(auto)
-
   updateCounter = updateCounter + 1
-
   if auto and updateCounter < 1 / updateInterval then
     return
   end
-
-
-
 end
 
 function updateButtons(auto)
@@ -431,14 +465,11 @@ function updateButtons(auto)
 
   updateCounter = 0
 
-  --  globalLoc = vec3(core.getConstructWorldPos())
-  --  globalLoc = vec3(-94134464.000, 12765536.000, -3634464.000)
-  --  constructLoc  = {x = globalLoc.x/400000, y = (globalLoc.y/400000), z = globalLoc.z/400000}
-
   if warpdrive then
     local decoded = json.decode(warpdrive.getData())
     local warpDriveDestination = decoded.destination
-    if warpDriveDestinationPlanet == nill or warpDriveDestinationPlanet.name ~= warpDriveDestination then
+    if warpDriveDestinationPlanet == nill or warpDriveDestinationPlanet.fullname ~= warpDriveDestination then
+
       warpDriveDestinationPlanet = planetByName(warpDriveDestination)
       if warpDriveDestinationPlanet ~= nill then
 
@@ -524,24 +555,26 @@ function updateButtons(auto)
 
     if screenObject.mapViewState == 1 then
       for i, planet in ipairs(planets) do
-        textColor = "#d2d1d1"
-        backColor = "#4B4B4B"
+        textColor = buttonTInactiveColor
+        backColor = buttonBInactiveColor
 
         if (screenObject.selectedPlanet == planet or screenObject.selectedPlanet ~=nill and screenObject.selectedPlanet.sourcePlanet == planet) then
-          textColor = "#515151"
-          backColor = "#c5c5c5"
+          textColor = buttonTActiveColor
+          backColor = buttonBActiveColor
         end
 
+
+
         if (warpDriveDestinationPlanet ~= nill and (warpDriveDestinationPlanet == planet or warpDriveDestinationPlanet.sourcePlanet == planet)) then
-          textColor = "#40d051"
+          textColor = buttonTWarpInactiveColor
           if (screenObject.selectedPlanet == planet or screenObject.selectedPlanet.sourcePlanet == planet) then
-            textColor = "#2a8535"
+            textColor = buttonTWarpActiveColor
           end
         end
 
         distanceToPlanet = getSuDistance(planet.center)
 
-        html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..buttonWidth..[[" y="]]..planet.button.y..[[" x="]]..planet.button.x..[[" stroke-width="]]..buttonStroke..[[" stroke="#dfdfdf" fill="]]..backColor..[["/>]]
+        html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..buttonWidth..[[" y="]]..planet.button.y..[[" x="]]..planet.button.x..[[" stroke-width="]]..buttonStroke..[[" stroke="]]..buttonBorderColor..[[" fill="]]..backColor..[["/>]]
         html = html..[[<text class="btext" y="]]..(planet.button.y+(buttonHeight/2)+20-buttonStroke*2)..[[" x="]]..(planet.button.x+10)..[[" fill="]]..textColor..[[">]]..planet.button.name..[[</text>]]
         html = html..[[<text class="bdtext" y="]]..(planet.button.y+(buttonHeight/2)+20-buttonStroke*2)..[[" x="]]..(planet.button.x-10+buttonWidth)..[[" fill="]]..textColor..[[">]]..distanceToPlanet..[[</text>]]
       end
@@ -558,23 +591,23 @@ function updateButtons(auto)
 
         for i, moon in ipairs(moons) do
 
-          textColor = "#d2d1d1"
+          textColor = buttonTInactiveColor
           backColor = "#333333"
           if (screenObject.selectedPlanet == moon) then
-            textColor = "#515151"
+            textColor = buttonTActiveColor
             backColor = "#97a9a6"
           end
 
           if (warpDriveDestinationPlanet == moon) then
-            textColor = "#40d051"
+            textColor = buttonTWarpInactiveColor
             if (screenObject.selectedPlanet == moon) then
-              textColor = "#287431"
+              textColor = buttonTWarpActiveColor
             end
           end
 
           calculatedDist = getSuDistance(moon.center)
 
-          html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..buttonWidth..[[" y="]]..(moon.button.y)..[[" x="]]..(moon.button.x)..[[" stroke-width="]]..buttonStroke..[[" stroke="#dfdfdf" fill="]]..backColor..[["/>]]
+          html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..buttonWidth..[[" y="]]..(moon.button.y)..[[" x="]]..(moon.button.x)..[[" stroke-width="]]..buttonStroke..[[" stroke="]]..buttonBorderColor..[[" fill="]]..backColor..[["/>]]
           html = html..[[<text class="btext" y="]]..(moon.button.y+(buttonHeight/2)+20-buttonStroke*2)..[[" x="]]..(moon.button.x+10)..[[" fill="]]..textColor..[[">]]..moon.name..[[</text>]]
           html = html..[[<text class="bdtext" y="]]..(moon.button.y+(buttonHeight/2)+20-buttonStroke*2)..[[" x="]]..(moon.button.x-10+buttonWidth)..[[" fill="]]..textColor..[[">]]..calculatedDist..[[</text>]]
 
@@ -582,11 +615,11 @@ function updateButtons(auto)
       end
 
 
-      textColor = "#d2d1d1"
+      textColor = buttonTInactiveColor
 
       for i, button in ipairs(weightScreenButtons) do
 
-        backColor = "#4B4B4B"
+        backColor = buttonBInactiveColor
         if screenObject.weightButtonClicked == button and screenObject.mouseDown then
           backColor = "#30786B"
         end
@@ -709,7 +742,7 @@ function update3d(auto)
     if screenObject.mapViewState ~= 1 then
       screenObject.screenCenterX = screenWidth / 2
       screenObject.screenCenterY = screenHeight / 2
-      screenObject.scale = 1.5
+      screenObject.scale = zoomScale
     else
       screenObject.screenCenterX = screenWidth / 2
       screenObject.screenCenterY = screenHeight - (screenHeight / 3)
@@ -750,7 +783,7 @@ function update3d(auto)
 
     html = style..[[<svg width="100%" height="100%" viewBox="0 0 ]]..screenWidth..[[ ]]..screenHeight..[[">]]
 
-    html = html..[[<rect fill="#2C3735" height="]]..screenHeight..[[" width="]]..screenWidth..[[" y="0" x="0"/>]]
+    html = html..[[<rect fill="]]..backGroundColor..[[" height="]]..screenHeight..[[" width="]]..screenWidth..[[" y="0" x="0"/>]]
 
     newPoints = {}
 
@@ -831,13 +864,13 @@ function update3d(auto)
 
     rotationSide = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, {x=0, y = 0, z= 10})
 
-    mapStrokeColor = "#00eaff"
+    mapStrokeColor = mapCircleColor
 
     if rotationSide.z < 0 then
-      mapStrokeColor = "#ffffff"
+      mapStrokeColor = mapBCircleColor
     end
 
-    html = html..[[<g fill="none" stroke-width="0.4em" style="stroke: ]]..mapStrokeColor..[[; stroke-opacity: 0.2; fill-opacity:0.3; transform-origin: ]]..toScreenCordsX(screenObject.screenCenterX)..[[% ]]..toScreenCordsY(screenObject.screenCenterY)..[[% 0px;transform: rotateX(]]..degreeX..[[deg) rotateY(]]..degreeY..[[deg) rotateZ(]]..degreeZ..[[deg);">]]
+    html = html..[[<g fill="none" stroke-width="0.3em" style="stroke: ]]..mapStrokeColor..[[; stroke-opacity: 0.3; fill-opacity:0.3; transform-origin: ]]..toScreenCordsX(screenObject.screenCenterX)..[[% ]]..toScreenCordsY(screenObject.screenCenterY)..[[% 0px;transform: rotateX(]]..degreeX..[[deg) rotateY(]]..degreeY..[[deg) rotateZ(]]..degreeZ..[[deg);">]]
     html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(300*screenObject.scale)..[[%"></circle>]]
     html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(250*screenObject.scale)..[[%"></circle>]]
     html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(200*screenObject.scale)..[[%"></circle>]]
@@ -864,7 +897,7 @@ function update3d(auto)
           end
           screenObject.timer = screenObject.timer + 1
 
-          html = html..[[<line stroke-linecap="undefined" stroke-linejoin="undefined" stroke-dasharray="]]..dashArray..[[" y2="]]..toScreenCordsY(distinationPoint.y)..[[%" x2="]]..toScreenCordsX(distinationPoint.x)..[[%" y1="]]..toScreenCordsY(originPoint.y)..[[%" x1="]]..toScreenCordsX(originPoint.x)..[[%" stroke-opacity="0.9" stroke-width="5" stroke="]]..lineColor..[[" fill="none" fill-opacity="0"/>]]
+          html = html..[[<line stroke-linecap="undefined" stroke-linejoin="undefined" stroke-dasharray="]]..dashArray..[[" y2="]]..toScreenCordsY(distinationPoint.y)..[[%" x2="]]..toScreenCordsX(distinationPoint.x)..[[%" y1="]]..toScreenCordsY(originPoint.y)..[[%" x1="]]..toScreenCordsX(originPoint.x)..[[%" stroke-opacity="0.9" stroke-width="5" stroke="]]..pathColor..[[" fill="none" fill-opacity="0"/>]]
 
         end
         previousPoint = planet.mapCoords
@@ -875,7 +908,7 @@ function update3d(auto)
       if planetPoint.planet ~= nill then
 
         if planetPoint.zeroPoint ~= nill then
-          html = html..[[<line stroke-linecap="undefined" stroke-linejoin="undefined" y2="]]..toScreenCordsY(planetPoint.y)..[[%" x2="]]..toScreenCordsX(planetPoint.x)..[[%" y1="]]..toScreenCordsY(planetPoint.zeroPoint.y)..[[%" x1="]]..toScreenCordsX(planetPoint.zeroPoint.x)..[[%" stroke-width="2" stroke-opacity="0.3" stroke="]]..lineColorZero..[[" fill="none" fill-opacity="0.5"/>]]
+          html = html..[[<line stroke-linecap="undefined" stroke-linejoin="undefined" y2="]]..toScreenCordsY(planetPoint.y)..[[%" x2="]]..toScreenCordsX(planetPoint.x)..[[%" y1="]]..toScreenCordsY(planetPoint.zeroPoint.y)..[[%" x1="]]..toScreenCordsX(planetPoint.zeroPoint.x)..[[%" stroke-width="2" stroke-opacity="0.3" stroke="]]..planetOffsetColor..[[" fill="none" fill-opacity="0.5"/>]]
         end
 
         html = html..[[<circle cx="]]..(toScreenCordsX(planetPoint.x))..[[%" cy="]]..(toScreenCordsY(planetPoint.y))..[[%" r="]]..toScreenCords(planetPoint.r)..[[%" class="circle" style="fill:]]..planetPoint.planet.color..[[; stroke-opacity: 0.5; fill-opacity: 1"></circle>]]
@@ -884,7 +917,8 @@ function update3d(auto)
     end
 
     constructPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, constructLoc)
-    html = html..[[<circle cx="]]..(toScreenCordsX(constructPoint.x))..[[%" cy="]]..(toScreenCordsY(constructPoint.y))..[[%" r="]]..toScreenCords(constructPoint.r)..[[%" class="circle" style="fill:#24ff00; stroke: #00eaff; stroke-opacity: 0.5; fill-opacity: 1"></circle>]]
+    html = html..[[<circle cx="]]..(toScreenCordsX(constructPoint.x))..[[%" cy="]]..(toScreenCordsY(constructPoint.y))..[[%" r="]]..toScreenCords(constructPoint.r)..[[%" class="circle" style="fill:]]..mapConstructColor..[[; stroke: ]]..mapConstructSColor..[[; stroke-opacity: 0.5; fill-opacity: 1"></circle>]]
+
 
 
     html = html ..[[</svg>]]
