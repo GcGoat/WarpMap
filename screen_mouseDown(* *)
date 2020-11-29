@@ -1,0 +1,2 @@
+-- lst variable should match slot name
+evaluateButtons(x, y, true, slot4)
