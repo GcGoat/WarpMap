@@ -14,6 +14,6 @@ By folowing these steps you will have screen connected to slot4 which will autom
 
 When everything connected copy code from https://raw.githubusercontent.com/GcGoat/WarpMap/main/JSON and then right click PB go into Advanced and then "Paste lua configuration from clipboard" after which you should get confirmation and you are done. Enable Pb and turn on screen
 
-In case you skipped some steps and you dont have databank or wapr drive, screen will not work until you properly set it up. For that you will need to add 2 filters (mouseDown(* *) and mouseUp(* *)) for each screen. Appropriate code needs to be added for each screen. keep in mind that last variable needs to match actual slot name, otherwise it will not work.
+In case you skipped some steps and you dont have databank or wapr drive, screen will not work until you properly set it up. For that you will need to add 2 filters (mouseDown(** *) and mouseUp(** *)) for each screen. Appropriate code needs to be added for each screen. keep in mind that last variable needs to match actual slot name, otherwise it will not work.
 
 Sine Notes. Due to bug relating to ships weight, you might not see its accurate weight until you sit into pilots chair.
