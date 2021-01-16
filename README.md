@@ -1,3 +1,9 @@
+Grey version
+
+![](http://www.zrips.net/wp-content/uploads/2021/01/warpMapgrey.jpg)
+
+Colorized
+
 ![](http://www.zrips.net/wp-content/uploads/2021/01/warpmap.jpg)
 
 Setup:
