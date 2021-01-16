@@ -1,14 +1,13 @@
-
-backGroundColor = "2C3735" --export: Defines main background color. Default: 2C3735
+backGroundColor = "DFDFDF" --export: Defines main background color. Default: 2C3735
 backGroundColor = "#"..backGroundColor
 
-pathColor = "5c58b6" --export: Defines travel path line color. Default: 5c58b6
+pathColor = "999999" --export: Defines travel path line color. Default: 5c58b6
 pathColor = "#"..pathColor
 
-planetOffsetColor = "D7F4FA" --export: Defines planet offset color. Default: D7F4FA
+planetOffsetColor = "2c2c2c" --export: Defines planet offset color. Default: D7F4FA
 planetOffsetColor = "#"..planetOffsetColor
 
-buttonBorderColor = "dfdfdf" --export: Defines button border color. Default: dfdfdf
+buttonBorderColor = "2c2c2c" --export: Defines button border color. Default: dfdfdf
 buttonBorderColor = "#"..buttonBorderColor
 
 buttonBInactiveColor = "4B4B4B" --export: Defines inactive button background color. Default: 4B4B4B
@@ -28,20 +27,20 @@ buttonTWarpInactiveColor = "#"..buttonTWarpInactiveColor
 buttonTWarpActiveColor = "756326" --export: Defines set warp active planet color. Default: 756326
 buttonTWarpActiveColor = "#"..buttonTWarpActiveColor
 
-mapCircleColor = "00eaff" --export: Defines circle front color. Default: 00eaff
+mapCircleColor = "2c2c2c" --export: Defines circle front color. Default: 00eaff
 mapCircleColor = "#"..mapCircleColor
-mapBCircleColor = "ffffff" --export: Defines circle back color. Default: ffffff
+mapBCircleColor = "2c2c2c" --export: Defines circle back color. Default: ffffff
 mapBCircleColor = "#"..mapBCircleColor
-mapCircleThickness = 0.5 --export: Defines circle thickness. Default: 0.5
+mapCircleThickness = 0.8 --export: Defines circle thickness. Default: 0.5
 mapCircleThickness =  mapCircleThickness.."em"
 
-mapConstructColor = "24ff00" --export: Defines current position color. Default: 24ff00
+mapConstructColor = "6f6f6f" --export: Defines current position color. Default: 24ff00
 mapConstructColor = "#"..mapConstructColor
 mapConstructSColor = "404040" --export: Defines current position stroke color. Default: 404040
 mapConstructSColor = "#"..mapConstructSColor
 
 
-planetColor = "0" --export: Defines planet colors. Set to 0 for colorized ones. Default: 0
+planetColor = "424242" --export: Defines planet colors. Set to 0 for colorized ones. Default: 0
 planetColor = "#"..planetColor
 
 
@@ -49,13 +48,13 @@ planetEdgeColor = "4b4b4b" --export: Defines planets edge color. Default: 4b4b4b
 planetEdgeColor = "#"..planetEdgeColor
 
 
-planetNameColor = "ffffff" --export: Defines planet name color. Default: ffffff
+planetNameColor = "2c2c2c" --export: Defines planet name color. Default: ffffff
 planetNameColor = "#"..planetNameColor
 
-miniTextColor = "dfdfdf" --export: Defines planet name color. Default: dfdfdf
+miniTextColor = "161616" --export: Defines planet name color. Default: dfdfdf
 miniTextColor = "#"..miniTextColor
 
-warpCostColor = "0" --export: Defines warp cost color. Set to 0 for colorized ones. Default: 0
+warpCostColor = "161616" --export: Defines warp cost color. Set to 0 for colorized ones. Default: 0
 warpCostColor = "#"..warpCostColor
 
 zoomScale = 1.5 --export: Defines map scale in full screen mode. Default: 1.5
@@ -618,10 +617,10 @@ function updateButtons(auto)
 				for i, moon in ipairs(moons) do
 
 					textColor = buttonTInactiveColor
-					backColor = "#333333"
+					backColor = buttonBInactiveColor
 					if (screenObject.selectedPlanet == moon) then
 						textColor = buttonTActiveColor
-						backColor = "#97a9a6"
+						backColor = buttonBActiveColor
 					end
 
 					if (warpDriveDestinationPlanet == moon) then
