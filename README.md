@@ -1,3 +1,5 @@
+![](http://www.zrips.net/wp-content/uploads/2021/01/warpmap.jpg)
+
 Setup:
 - Programable Board
 - Warp Drive (optional)
@@ -17,3 +19,4 @@ When everything connected copy code from https://raw.githubusercontent.com/GcGoa
 In case you skipped some steps and you dont have databank or wapr drive, screen will not work until you properly set it up. For that you will need to add 2 filters (mouseDown(\* \*) and mouseUp(\* \*)) for each screen. Appropriate code needs to be added for each screen. keep in mind that last variable needs to match actual slot name, otherwise it will not work.
 
 Sine Notes. Due to bug relating to ships weight, you might not see its accurate weight until you sit into pilots chair.
+And just FYI make sure you have put away your tool before testing clickable screens.
