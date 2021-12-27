@@ -1,72 +1,17 @@
-backGroundColor = "DFDFDF" --export: Defines main background color. Default: 2C3735
-backGroundColor = "#"..backGroundColor
 
-pathColor = "999999" --export: Defines travel path line color. Default: 5c58b6
-pathColor = "#"..pathColor
+buttonHeight = 35
 
-planetOffsetColor = "2c2c2c" --export: Defines planet offset color. Default: D7F4FA
-planetOffsetColor = "#"..planetOffsetColor
+-- buttonWidth = 333
 
-buttonBorderColor = "2c2c2c" --export: Defines button border color. Default: dfdfdf
-buttonBorderColor = "#"..buttonBorderColor
-
-buttonBInactiveColor = "4B4B4B" --export: Defines inactive button background color. Default: 4B4B4B
-buttonBInactiveColor = "#"..buttonBInactiveColor
-
-buttonTInactiveColor = "d2d1d1" --export: Defines inactive button text color. Default: d2d1d1
-buttonTInactiveColor = "#"..buttonTInactiveColor
-
-buttonBActiveColor = "c5c5c5" --export: Defines inactive button background color. Default: c5c5c5
-buttonBActiveColor = "#"..buttonBActiveColor
-
-buttonTActiveColor = "515151" --export: Defines active button text color. Default: 515151
-buttonTActiveColor = "#"..buttonTActiveColor
-
-buttonTWarpInactiveColor = "D0AF40" --export: Defines set warp planet color. Default: D0AF40
-buttonTWarpInactiveColor = "#"..buttonTWarpInactiveColor
-buttonTWarpActiveColor = "756326" --export: Defines set warp active planet color. Default: 756326
-buttonTWarpActiveColor = "#"..buttonTWarpActiveColor
-
-mapCircleColor = "2c2c2c" --export: Defines circle front color. Default: 00eaff
-mapCircleColor = "#"..mapCircleColor
-mapBCircleColor = "2c2c2c" --export: Defines circle back color. Default: ffffff
-mapBCircleColor = "#"..mapBCircleColor
-mapCircleThickness = 0.8 --export: Defines circle thickness. Default: 0.5
-mapCircleThickness =  mapCircleThickness.."em"
-
-mapConstructColor = "6f6f6f" --export: Defines current position color. Default: 24ff00
-mapConstructColor = "#"..mapConstructColor
-mapConstructSColor = "404040" --export: Defines current position stroke color. Default: 404040
-mapConstructSColor = "#"..mapConstructSColor
-
-
-planetColor = "424242" --export: Defines planet colors. Set to 0 for colorized ones. Default: 0
-planetColor = "#"..planetColor
-
-
-planetEdgeColor = "4b4b4b" --export: Defines planets edge color. Default: 4b4b4b
-planetEdgeColor = "#"..planetEdgeColor
-
-
-planetNameColor = "2c2c2c" --export: Defines planet name color. Default: ffffff
-planetNameColor = "#"..planetNameColor
-
-miniTextColor = "161616" --export: Defines planet name color. Default: dfdfdf
-miniTextColor = "#"..miniTextColor
-
-warpCostColor = "161616" --export: Defines warp cost color. Set to 0 for colorized ones. Default: 0
-warpCostColor = "#"..warpCostColor
-
-zoomScale = 1.5 --export: Defines map scale in full screen mode. Default: 1.5
-
-buttonHeight = 40
-buttonWidth = 333
 buttonSpacing = 3
 buttonStroke = 2
 buttonStrokeHalf = buttonStroke / 2
 
 screenHeight = 612
 screenWidth = 1024
+
+buttonsPerLine = 4
+buttonWidth = (screenWidth / buttonsPerLine) - (buttonSpacing * (buttonsPerLine-1))+ (buttonStrokeHalf * buttonsPerLine)
 
 radarScale = 110
 radarFullScreenScale = 50
@@ -80,14 +25,10 @@ warpDriveDestinationPlanet = nill
 
 updateInterval = 1
 updateMouseInterval = 0.05
+updateHoverInterval = 0.05
 
-function Split(s, delimiter)
-	result = {};
-	for match in (s..delimiter):gmatch("(.-)"..delimiter) do
-		table.insert(result, match);
-	end
-	return result;
-end
+shipWeight = 0
+
 
 function initializeScreen(key, screenUnit)
 	return {
@@ -107,7 +48,10 @@ function initializeScreen(key, screenUnit)
 		timer = 0,
 		changeView = true,
 		mouseDown = false,
-		selectedPlanet = nill}
+		selectedPlanet = nill,
+		hover = nill,
+		zoomScale = 1.5,
+		targetZoomScale = 1.5}
 end
 
 for key, value in pairs(unit) do
@@ -124,10 +68,251 @@ for key, value in pairs(unit) do
 			elseif value.getElementClass() == "CoreUnitStatic" then
 				core = value
 			end
-
 		end
 	end
 end
+
+presets = {}
+
+function addPreset(preset)
+	presets[#presets+1] = preset
+end
+
+
+-- #1
+addPreset({
+	backGroundColor = "0c0f09",
+	pathColor = "999999",
+	planetOffsetColor = "ffffff",
+	buttonBorderColor = "2c2c2c",
+	buttonBorderHoverColor = "ffffff",
+	buttonBInactiveColor = "ff6700",
+	buttonTInactiveColor = "d2d1d1",
+	buttonBActiveColor = "fc7b24",
+	buttonTActiveColor = "b1b1b1",
+	buttonTWarpInactiveColor = "D0AF40",
+	buttonTWarpActiveColor = "b1b1b1",
+	mapCircleColor = "9e9e9e",
+	mapBCircleColor = "a08787",
+	mapConstructColor = "00ff00",
+	mapConstructSColor = "440044",
+	planetColor = "ffffff",
+	planetEdgeColor = "ffffff",
+	planetNameColor = "ff6700",
+	miniTextColor = "ff6700",
+	warpCostColor = "fc7b24"})
+
+-- #2
+addPreset({
+	backGroundColor = "DFDFDF",
+	pathColor = "999999",
+	planetOffsetColor = "2c2c2c",
+	buttonBorderColor = "2c2c2c",
+	buttonBorderHoverColor = "ffffff",
+	buttonBInactiveColor = "4B4B4B",
+	buttonTInactiveColor = "d2d1d1",
+	buttonBActiveColor = "c5c5c5",
+	buttonTActiveColor = "515151",
+	buttonTWarpInactiveColor = "D0AF40",
+	buttonTWarpActiveColor = "756326",
+	mapCircleColor = "2c2c2c",
+	mapBCircleColor = "2c2c2c",
+	mapConstructColor = "6f6f6f",
+	mapConstructSColor = "404040",
+	planetColor = "424242",
+	planetEdgeColor = "4b4b4b",
+	planetNameColor = "2c2c2c",
+	miniTextColor = "161616",
+	warpCostColor = "161616"})
+
+-- #3
+addPreset({
+	backGroundColor = "031333",
+	pathColor = "999999",
+	planetOffsetColor = "82e0ff",
+	buttonBorderColor = "2c2c2c",
+	buttonBorderHoverColor = "68b3cc",
+	buttonBInactiveColor = "68b3cc",
+	buttonTInactiveColor = "5d3c00",
+	buttonBActiveColor = "335c69",
+	buttonTActiveColor = "a66c02",
+	buttonTWarpInactiveColor = "595601",
+	buttonTWarpActiveColor = "bdb603",
+	mapCircleColor = "9e9e9e",
+	mapBCircleColor = "a08787",
+	mapConstructColor = "00ff00",
+	mapConstructSColor = "440044",
+	planetColor = "1b708c",
+	planetEdgeColor = "000000",
+	planetNameColor = "82e0ff",
+	miniTextColor = "82e0ff",
+	warpCostColor = "5fd6fd"})
+
+-- #4
+addPreset({
+	backGroundColor = "000000",
+	pathColor = "ffffff",
+	planetOffsetColor = "ffffff",
+	buttonBorderColor = "2c2c2c",
+	buttonBorderHoverColor = "ffffff",
+	buttonBInactiveColor = "151515",
+	buttonTInactiveColor = "ffffff",
+	buttonBActiveColor = "232323",
+	buttonTActiveColor = "ffffff",
+	buttonTWarpInactiveColor = "909090",
+	buttonTWarpActiveColor = "909090",
+	mapCircleColor = "ffffff",
+	mapBCircleColor = "cfcfcf",
+	mapConstructColor = "00ff00",
+	mapConstructSColor = "440044",
+	planetColor = "4a4ed7",
+	planetEdgeColor = "ffffff",
+	planetNameColor = "ffffff",
+	miniTextColor = "ffffff",
+	warpCostColor = "ffffff"})
+-- #5
+addPreset({
+	backGroundColor = "000000",
+	pathColor = "ffffff",
+	planetOffsetColor = "ffffff",
+	buttonBorderColor = "2c2c2c",
+	buttonBorderHoverColor = "4a4ed7",
+	buttonBInactiveColor = "ffffff",
+	buttonTInactiveColor = "151515",
+	buttonBActiveColor = "ffffff",
+	buttonTActiveColor = "232323",
+	buttonTWarpInactiveColor = "1d1c1c",
+	buttonTWarpActiveColor = "373030",
+	mapCircleColor = "ffffff",
+	mapBCircleColor = "cfcfcf",
+	mapConstructColor = "00ff00",
+	mapConstructSColor = "440044",
+	planetColor = "4a4ed7",
+	planetEdgeColor = "ffffff",
+	planetNameColor = "ffffff",
+	miniTextColor = "ffffff",
+	warpCostColor = "ffffff"})
+-- #6
+addPreset({
+	backGroundColor = "3c6553",
+	pathColor = "ffffff",
+	planetOffsetColor = "2c2c2c",
+	buttonBorderColor = "2c2c2c",
+	buttonBorderHoverColor = "ffffff",
+	buttonBInactiveColor = "070b0a",
+	buttonTInactiveColor = "3c6553",
+	buttonBActiveColor = "3c6553",
+	buttonTActiveColor = "070b0a",
+	buttonTWarpInactiveColor = "1d1c1c",
+	buttonTWarpActiveColor = "1d1c1c",
+	mapCircleColor = "ffffff",
+	mapBCircleColor = "cfcfcf",
+	mapConstructColor = "00ff00",
+	mapConstructSColor = "440044",
+	planetColor = "3c6553",
+	planetEdgeColor = "ffffff",
+	planetNameColor = "0d1311",
+	miniTextColor = "0d1311",
+	warpCostColor = "0d1311"})
+-- #7
+addPreset({
+	backGroundColor = "070b0a",
+	pathColor = "ffffff",
+	planetOffsetColor = "ffffff",
+	buttonBorderColor = "2c2c2c",
+	buttonBorderHoverColor = "ffffff",
+	buttonBInactiveColor = "3c6553",
+	buttonTInactiveColor = "070b0a",
+	buttonBActiveColor = "070b0a",
+	buttonTActiveColor = "3c6553",
+	buttonTWarpInactiveColor = "1d1c1c",
+	buttonTWarpActiveColor = "808080",
+	mapCircleColor = "ffffff",
+	mapBCircleColor = "cfcfcf",
+	mapConstructColor = "00ff00",
+	mapConstructSColor = "440044",
+	planetColor = "ffffff",
+	planetEdgeColor = "ffffff",
+	planetNameColor = "3c6553",
+	miniTextColor = "3c6553",
+	warpCostColor = "3c6553"})
+-- #8
+addPreset({
+	backGroundColor = "00001e",
+	pathColor = "ffffff",
+	planetOffsetColor = "025a6e",
+	buttonBorderColor = "2c2c2c",
+	buttonBorderHoverColor = "ffffff",
+	buttonBInactiveColor = "025a6e",
+	buttonTInactiveColor = "fba71d",
+	buttonBActiveColor = "fba71d",
+	buttonTActiveColor = "025a6e",
+	buttonTWarpInactiveColor = "1d1c1c",
+	buttonTWarpActiveColor = "04d8d7",
+	mapCircleColor = "ffffff",
+	mapBCircleColor = "cfcfcf",
+	mapConstructColor = "00ff00",
+	mapConstructSColor = "440044",
+	planetColor = "0d71d3",
+	planetEdgeColor = "ffffff",
+	planetNameColor = "816d32",
+	miniTextColor = "816d32",
+	warpCostColor = "816d32"})
+-- #9
+addPreset({
+	backGroundColor = "060000",
+	pathColor = "ff4b00",
+	planetOffsetColor = "025a6e",
+	buttonBorderColor = "b20000",
+	buttonBorderHoverColor = "ffffff",
+	buttonBInactiveColor = "100000",
+	buttonTInactiveColor = "aa0000",
+	buttonBActiveColor = "280101",
+	buttonTActiveColor = "aa0000",
+	buttonTWarpInactiveColor = "c51d1d",
+	buttonTWarpActiveColor = "c51d1d",
+	mapCircleColor = "ff0000",
+	mapBCircleColor = "ff0000",
+	mapConstructColor = "00ff00",
+	mapConstructSColor = "440044",
+	planetColor = "001aff",
+	planetEdgeColor = "ffffff",
+	planetNameColor = "ff0000",
+	miniTextColor = "ff0000",
+	warpCostColor = "ff0000"})
+
+
+
+mapCircleThickness = 0.8 --export: Defines circle thickness. Default: 0.8
+mapCircleThickness =  mapCircleThickness.."vh"
+
+showSafeZone = false --export: Shows or hides safe zone bubble
+
+
+
+
+local presetButton = {width = buttonHeight, height = buttonHeight, y= buttonSpacing + ((buttonHeight+buttonSpacing+buttonStrokeHalf) * (12 / buttonsPerLine)), x=buttonSpacing, preset = 1}
+
+
+function saveAll()
+	if databank then
+		savepreset()
+		for _,screenObject in ipairs(screens) do
+			save(screenObject)
+		end
+		if (core.getConstructMass() / 1000 > 3) then
+			databank.setFloatValue("shipWeight", math.floor(core.getConstructMass() / 1000))
+		end
+	end
+end
+
+function savepreset()
+	if databank then
+		databank.setIntValue("warpPreset", presetButton.preset)
+	end
+end
+
+
 
 function split(s, delimiter)
 	result = {};
@@ -137,15 +322,19 @@ function split(s, delimiter)
 	return result;
 end
 
-shipWeight = 0
-
 if databank then
 	for _,key in ipairs(json.decode(databank.getKeys())) do
 		value = databank.getFloatValue(key)
 
-		if key == "shipWeight" then
-			shipWeight = value
-		end
+		--		if key == "shipWeight" then
+		--			shipWeight = value
+		--		elseif key == "showSafeZone" then
+		--			if value == 1 then
+		--				showSafeZone = true
+		--			else
+		--				showSafeZone = false
+		--			end
+		--		end
 
 		for _,screenObject in ipairs(screens) do
 			if string.match(key, screenObject.slot) then
@@ -157,6 +346,8 @@ if databank then
 					screenObject.angle = value
 				elseif lastPart == "pitch" then
 					screenObject.pitch = value
+				elseif lastPart == "zoomScale" then
+					screenObject.zoomScale = value
 				elseif lastPart == "yaw" then
 					screenObject.yaw = value
 				elseif lastPart == "state" then
@@ -167,36 +358,62 @@ if databank then
 			end
 		end
 	end
+
+	if databank.hasKey("shipWeight") then
+		shipWeight = math.floor(databank.getFloatValue("shipWeight"))
+	end
+
+
+	if databank.hasKey("warpPreset") then
+		presetButton.preset = databank.getIntValue("warpPreset")
+		if presetButton.preset < 1 then
+			presetButton.preset = 1
+		end
+	end
+
 end
+
+preset =  presets[1]
+
+function updatePreset()
+	if #presets < presetButton.preset or presetButton.preset < 1 then
+		preset =  presets[1]
+		return
+	end
+	preset =  presets[presetButton.preset]
+end
+updatePreset()
+
+function Split(s, delimiter)
+	result = {};
+	for match in (s..delimiter):gmatch("(.-)"..delimiter) do
+		table.insert(result, match);
+	end
+	return result;
+end
+
+
 
 function save(screenObject)
 	if databank then
 		databank.setFloatValue(screenObject.slot.."_angle", screenObject.angle)
 		databank.setFloatValue(screenObject.slot.."_pitch", screenObject.pitch)
 		databank.setFloatValue(screenObject.slot.."_yaw", screenObject.yaw)
+		databank.setFloatValue(screenObject.slot.."_zoomScale", screenObject.zoomScale)
 		databank.setFloatValue(screenObject.slot.."_state", screenObject.mapViewState)
 	end
 end
 
-function saveAll()
-	if databank then
-		databank.clear()
-		for _,screenObject in ipairs(screens) do
-			save(screenObject)
-		end
-		databank.setFloatValue("shipWeight", math.floor(core.getConstructMass()/ 1000))
-	end
-end
 
 weightScreenButtons = {}
 
-local amountButton = {id = #weightScreenButtons, width = 100, y=screenHeight-buttonHeight-buttonSpacing, x=screenWidth - 100 -10, change = 100}
+local amountButton = {id = #weightScreenButtons, width = 80, y=screenHeight-buttonHeight-buttonSpacing, x=screenWidth - 80 -10, change = 100}
 table.insert(weightScreenButtons, amountButton)
-local amountButton = {id = #weightScreenButtons, width = 80, y=amountButton.y, x=amountButton.x- 80 -3, change = 10}
+local amountButton = {id = #weightScreenButtons, width = 60, y=amountButton.y, x=amountButton.x- 60 -3, change = 10}
 table.insert(weightScreenButtons, amountButton)
-local amountButton = {id = #weightScreenButtons, width = 70, y=amountButton.y, x=amountButton.x- 70 -3, change = -10}
+local amountButton = {id = #weightScreenButtons, width = 50, y=amountButton.y, x=amountButton.x- 50 -3, change = -10}
 table.insert(weightScreenButtons, amountButton)
-local amountButton = {id = #weightScreenButtons, width = 90, y=amountButton.y, x=amountButton.x- 90 -3, change = -100}
+local amountButton = {id = #weightScreenButtons, width = 70, y=amountButton.y, x=amountButton.x- 70 -3, change = -100}
 table.insert(weightScreenButtons, amountButton)
 
 function getMoonsCount(planet)
@@ -226,13 +443,39 @@ end
 planets = {}
 
 -- creating planet button and assingning it to planet object
-function addPlanetButton(planet, buttonX, buttonY)
+function addPlanetButton(planet)
+
+	local x = 0
+	local y = 0
+
+
+	local line = math.floor(#planets / buttonsPerLine)
+	local place = #planets % buttonsPerLine
+
+	buttonX = buttonSpacing + ((buttonWidth+buttonSpacing+buttonStrokeHalf) * place)
+	buttonY = buttonSpacing + ((buttonHeight+buttonSpacing+buttonStrokeHalf) * line)
+
 	button = {id = #planets + 1, planet = planet, name = formatPlanetName(planet), x=buttonX, y=buttonY}
 	planet.button = button
 	planet.mapCoords = {x = mapX(planet),y = mapY(planet), z = mapZ(planet)}
 	planet.fullname = planet.name
 	table.insert(planets, planet)
 end
+
+--::pos{0,0,13855453,7385167,-38337}
+--::pos{0,0,13771471,7435803,-128971}
+safeZoneCenter = vec3(13771471 / 400000, 7435803 / 400000, -128971 / 400000)
+
+--edge = vec3(-2630938.1075 / 400000, 22487.5022 / 400000, -190192.7468 / 400000)
+
+-- safe zone edge ::pos{0,0,-2630938.1075,22487.5022,-190192.7468}
+-- Safe zone radius 90SU
+
+safeZoneSize = 27.3*2
+
+SU100 = 30*2
+
+
 
 -- Moons
 -- Madis
@@ -270,34 +513,20 @@ local IonMoon1 = {name = "Moon 1",center = vec3(2472916.800,-99133747.000,-11335
 local IonMoon2 = {name = "Moon 2",center = vec3(2995424.500,-99275010.000,-1378480.700), radius = 15000}
 
 -- Planets
-local ion = {name = "Ion", center = vec3(2995424.500,-99275010.000,-1378480.700), radius = 44950, color = "#9fc1df", moons = {IonMoon1, IonMoon2}}
-local thades = {name = "Thades", center = vec3(29165536.000, 10865536.000, 65536.000), radius = 49000, color = "#da985f", moons = {ThadesMoon1, ThadesMoon2}}
-local sinnen = {name = "Sinnen", center = vec3(58665536.000, 29665536.000, 58165536.000), radius = 54950, color = "#d0885b", moons = {SinnenMoon1}, drawZero = true}
-local alioth = {name = "Alioth", center = vec3(-8.000, -8.000, -126303.000), radius = 126068, color = "#4d5861", moons = {AliothMoon1, AliothMoon4, Sanctuary}}
-local madis = {name = "Madis", center = vec3(17465536.000, 22665536.000, -34464.000), radius = 44300, color = "#777bbf", moons = {MadisMoon1, MadisMoon2, MadisMoon3}}
-local jago = {name = "Jago", center = vec3(-94134464.000, 12765536.000, -3634464.000), radius = 61590, color = "#36444f", moons = {}}
-local symeon = {name = "Symeon", center = vec3(14165536.000, -85634464.000, -934464.000), radius = 49050, color = "#cad1d9", moons = {}}
-local lacobus = {name = "Lacobus", center = vec3(98865536.000, -13534464.000, -934464.000), radius = 55650, color = "#deedf9", moons = {LacobusMoon1, LacobusMoon2, LacobusMoon3}}
-local teoma = {name = "Teoma", center = vec3(80865536.000, 54665536.000, -934464.000), radius = 62000, color = "#3e5268", moons = {}}
-local feli = {name = "Feli", center = vec3(-43534464.000, 22565536.000, -48934464.000), radius = 60000, color = "#928370", moons = {FeliMoon1}, drawZero = true}
-local talemai = {name = "Talemai", center = vec3(-13234464.000, 55765536.000, 465536.000), radius = 57450, color = "#929482", moons = {TalemaiMoon1, TalemaiMoon2, TalemaiMoon3}}
-local sicari = {name = "Sicari",center = vec3(52765536.000, 27165536.000, 52065536.000), radius = 51100, color = "#b78a64", moons = {}, drawZero = true}
+addPlanetButton({name = "Alioth", center = vec3(-8.000, -8.000, -126303.000), radius = 126068, color = "#4d5861", moons = {AliothMoon1, AliothMoon4, Sanctuary}})
+addPlanetButton({name = "Madis", center = vec3(17465536.000, 22665536.000, -34464.000), radius = 44300, color = "#777bbf", moons = {MadisMoon1, MadisMoon2, MadisMoon3}})
+addPlanetButton({name = "Thades", center = vec3(29165536.000, 10865536.000, 65536.000), radius = 49000, color = "#da985f", moons = {ThadesMoon1, ThadesMoon2}})
+addPlanetButton({name = "Ion", center = vec3(2995424.500,-99275010.000,-1378480.700), radius = 44950, color = "#9fc1df", moons = {IonMoon1, IonMoon2}})
+addPlanetButton({name = "Sinnen", center = vec3(58665536.000, 29665536.000, 58165536.000), radius = 54950, color = "#d0885b", moons = {SinnenMoon1}, drawZero = true})
+addPlanetButton({name = "Jago", center = vec3(-94134464.000, 12765536.000, -3634464.000), radius = 61590, color = "#36444f", moons = {}})
+addPlanetButton({name = "Symeon", center = vec3(14165536.000, -85634464.000, -934464.000), radius = 49050, color = "#cad1d9", moons = {}})
+addPlanetButton({name = "Lacobus", center = vec3(98865536.000, -13534464.000, -934464.000), radius = 55650, color = "#deedf9", moons = {LacobusMoon1, LacobusMoon2, LacobusMoon3}})
+addPlanetButton({name = "Teoma", center = vec3(80865536.000, 54665536.000, -934464.000), radius = 62000, color = "#3e5268", moons = {}})
+addPlanetButton({name = "Feli", center = vec3(-43534464.000, 22565536.000, -48934464.000), radius = 60000, color = "#928370", moons = {FeliMoon1}, drawZero = true})
+addPlanetButton({name = "Talemai", center = vec3(-13234464.000, 55765536.000, 465536.000), radius = 57450, color = "#929482", moons = {TalemaiMoon1, TalemaiMoon2, TalemaiMoon3}})
+addPlanetButton({name = "Sicari", center = vec3(52765536.000, 27165536.000, 52065536.000), radius = 51100, color = "#b78a64", moons = {}, drawZero = true})
 
--- adding planets and setting their button positions
-addPlanetButton(alioth, 10, 10)
-addPlanetButton(madis, 10, button.y+(buttonHeight+buttonSpacing+buttonStrokeHalf))
-addPlanetButton(thades, 10, button.y+(buttonHeight+buttonSpacing+buttonStrokeHalf))
-addPlanetButton(talemai, 10, button.y+(buttonHeight+buttonSpacing+buttonStrokeHalf))
 
-addPlanetButton(feli, button.x+(buttonWidth+buttonSpacing+buttonStrokeHalf), 10)
-addPlanetButton(sicari, button.x, button.y+(buttonHeight+buttonSpacing+buttonStrokeHalf))
-addPlanetButton(symeon, button.x, button.y+(buttonHeight+buttonSpacing+buttonStrokeHalf))
-addPlanetButton(sinnen, button.x, button.y+(buttonHeight+buttonSpacing+buttonStrokeHalf))
-
-addPlanetButton(jago, button.x+(buttonWidth+buttonSpacing+buttonStrokeHalf), 10)
-addPlanetButton(teoma, button.x, button.y+(buttonHeight+buttonSpacing+buttonStrokeHalf))
-addPlanetButton(ion, button.x, button.y+(buttonHeight+buttonSpacing+buttonStrokeHalf))
-addPlanetButton(lacobus, button.x, button.y+(buttonHeight+buttonSpacing+buttonStrokeHalf))
 
 buttonLowY = button.y
 
@@ -314,7 +543,13 @@ for i, planet in ipairs(planets) do
 		end
 		for y, moon in ipairs(planet.moons) do
 			ys = buttonLowY+(buttonHeight+buttonSpacing+buttonStrokeHalf)
-			xs = 10 + (shift * (buttonWidth+buttonSpacing+buttonStrokeHalf)) + extraX
+
+			middle =	screenWidth / 2
+
+			xs =  middle - ((buttonWidth / 2) * #planet.moons) + ((y-1) * (buttonWidth+buttonSpacing+buttonStrokeHalf)-buttonSpacing)
+
+			--			xs = 10 + (shift * (buttonWidth+buttonSpacing+buttonStrokeHalf)) + extraX
+
 			local button = {id = y, planet = moon, name = planet.name.." "..moon.name,  y=ys, x=xs}
 			moon.button = button
 			moon.sourcePlanet = planet
@@ -327,8 +562,11 @@ end
 
 mapSize = 100
 
-style = [[<style>.circle {stroke: ]]..planetEdgeColor..[[;stroke-width: 0.3em;stroke-opacity: 0.9;fill-opacity: 0;}.planet {stroke: black;stroke-width: 1;}text {font-family: Arial,sans-serif, Helvetica;stroke-width: 0;font-weight: bold;}.btext {font-size: 4em;}.bdtext {font-size: 2.5em;text-anchor: end;}.minitext {fill: ]]..planetNameColor..[[;}.mediumtext {fill: white;font-size: 2.8em;fill: ]]..miniTextColor..[[;}</style>]]
+function updateStyle()
+	style = [[<style>.circle {stroke: #]]..preset.planetEdgeColor..[[;stroke-width: 0.3vh;stroke-opacity: 0.9;fill-opacity: 0;}.planet {stroke: black;stroke-width: 1;}text {font-family: Arial,sans-serif, Helvetica;stroke-width: 0;font-weight: bold;}.btext {font-size: 5vh;}.bdtext {font-size: 4vh;text-anchor: end;}.minitext {fill: #]]..preset.planetNameColor..[[;}.mediumtext {fill: white;font-size: 5vh;fill: #]]..preset.miniTextColor..[[;}</style>]]
+end
 
+updateStyle()
 
 function matmul(projection, vector)
 	x = (projection[1][1] * vector.x) + (projection[1][2] * vector.y) + (projection[1][3] * vector.z)
@@ -503,6 +741,7 @@ function updateButtons(auto)
 				end
 			end
 		end
+		warpDriveMath = tonumber(Split(decoded.cellCount, " / ")[2])
 		warpDriveCells =  tonumber(Split(decoded.cellCount, " / ")[1])
 	end
 
@@ -512,7 +751,7 @@ function updateButtons(auto)
 
 	constructWeight = math.ceil(core.getConstructMass() / 1000)
 
-	if constructWeight == 0 and shipWeight ~= 0 then
+	if constructWeight < 2 and shipWeight > 2 then
 		constructWeight = shipWeight
 	end
 
@@ -539,11 +778,23 @@ function updateButtons(auto)
 			screenObject.route = {selectedPlanet}
 		end
 
-
-
 		if core then
-			warpmath = math.floor((constructWeight  * calculatedDist * 0.00025)+0.5)
-			warpmathBack = math.floor(((constructWeight+screenObject.extraWeight)  * calculatedDist * 0.00025)+0.5)
+			--			aepx = 0.0002466
+			aepx = 0.00025
+			if warpDriveMath ~=nill and screenObject.selectedPlanet == warpDriveDestinationPlanet then
+				warpmath = warpDriveMath
+				warpmathBack = math.floor((screenObject.extraWeight)  *  calculatedDist * aepx)
+				warpmathBack = warpmath + warpmathBack
+			else
+
+
+
+				--24.5 = 1000 * (100-2) * 0.00025
+				-- (100-2) = 24.5 / 1000 / 0.00025
+
+				warpmath = math.floor((constructWeight)  *  (calculatedDist-2) * aepx)
+				warpmathBack = math.floor((constructWeight+screenObject.extraWeight)  *  (calculatedDist-2) * aepx)
+			end
 			if constructWeight+screenObject.extraWeight < 0 then
 				screenObject.extraWeight = -constructWeight
 			end
@@ -552,6 +803,14 @@ function updateButtons(auto)
 			warpmathBack = 0
 		end
 
+
+		if warpmath < 1 then
+			warpmath = 1
+		end
+
+		if warpmathBack < 1 then
+			warpmathBack = 1
+		end
 
 		approxSpeed = ""
 		predictedSpeed = shipVelocity
@@ -571,6 +830,14 @@ function updateButtons(auto)
 		shipVelocityFormat = string.format("%.0f", predictedSpeed)
 
 
+
+
+		lessWarpDistance = (warpmath - 1) / constructWeight / aepx
+		lessWarpWeight = (warpmath - 1) / (calculatedDist-2) / aepx
+
+
+
+
 		time_to_distance = string.format("%.2f", calculatedDist * 200 / ( predictedSpeed ) * 60)
 		dist = string.format("%.0f", calculatedDist * 200)
 
@@ -580,28 +847,34 @@ function updateButtons(auto)
 
 		if screenObject.mapViewState == 1 then
 			for i, planet in ipairs(planets) do
-				textColor = buttonTInactiveColor
-				backColor = buttonBInactiveColor
+				textColor = preset.buttonTInactiveColor
+				backColor = preset.buttonBInactiveColor
 
 				if (screenObject.selectedPlanet == planet or screenObject.selectedPlanet ~=nill and screenObject.selectedPlanet.sourcePlanet == planet) then
-					textColor = buttonTActiveColor
-					backColor = buttonBActiveColor
+					textColor = preset.buttonTActiveColor
+					backColor = preset.buttonBActiveColor
 				end
 
 
 
 				if (warpDriveDestinationPlanet ~= nill and (warpDriveDestinationPlanet == planet or warpDriveDestinationPlanet.sourcePlanet == planet)) then
-					textColor = buttonTWarpInactiveColor
+					textColor = preset.buttonTWarpInactiveColor
 					if (screenObject.selectedPlanet == planet or screenObject.selectedPlanet.sourcePlanet == planet) then
-						textColor = buttonTWarpActiveColor
+						textColor = preset.buttonTWarpActiveColor
 					end
 				end
 
 				distanceToPlanet = getSuDistance(planet.center)
 
-				html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..buttonWidth..[[" y="]]..planet.button.y..[[" x="]]..planet.button.x..[[" stroke-width="]]..buttonStroke..[[" stroke="]]..buttonBorderColor..[[" fill="]]..backColor..[["/>]]
-				html = html..[[<text class="btext" y="]]..(planet.button.y+(buttonHeight/2)+20-buttonStroke*2)..[[" x="]]..(planet.button.x+10)..[[" fill="]]..textColor..[[">]]..planet.button.name..[[</text>]]
-				html = html..[[<text class="bdtext" y="]]..(planet.button.y+(buttonHeight/2)+20-buttonStroke*2)..[[" x="]]..(planet.button.x-10+buttonWidth)..[[" fill="]]..textColor..[[">]]..string.format("%.1f", distanceToPlanet)..[[</text>]]
+				borderColor = preset.buttonBorderColor
+
+				if screenObject.hover == planet.button then
+					borderColor = preset.buttonBorderHoverColor
+				end
+
+				html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..buttonWidth..[[" y="]]..planet.button.y..[[" x="]]..planet.button.x..[[" stroke-width="]]..buttonStroke..[[" stroke="#]]..borderColor..[[" fill="#]]..backColor..[["/>]]
+				html = html..[[<text class="btext" y="]]..(planet.button.y+(buttonHeight/2)+15-buttonStroke*2)..[[" x="]]..(planet.button.x+10)..[[" fill="#]]..textColor..[[">]]..planet.button.name..[[</text>]]
+				html = html..[[<text class="bdtext" y="]]..(planet.button.y+(buttonHeight/2)+15-buttonStroke*2)..[[" x="]]..(planet.button.x-10+buttonWidth)..[[" fill="#]]..textColor..[[">]]..string.format("%.1f", distanceToPlanet)..[[</text>]]
 			end
 
 			if screenObject.selectedPlanet ~= nill then
@@ -616,69 +889,93 @@ function updateButtons(auto)
 
 				for i, moon in ipairs(moons) do
 
-					textColor = buttonTInactiveColor
-					backColor = buttonBInactiveColor
+					textColor = preset.buttonTInactiveColor
+					backColor = preset.buttonBInactiveColor
 					if (screenObject.selectedPlanet == moon) then
-						textColor = buttonTActiveColor
-						backColor = buttonBActiveColor
+						textColor = preset.buttonTActiveColor
+						backColor = preset.buttonBActiveColor
 					end
 
 					if (warpDriveDestinationPlanet == moon) then
-						textColor = buttonTWarpInactiveColor
+						textColor = preset.buttonTWarpInactiveColor
 						if (screenObject.selectedPlanet == moon) then
-							textColor = buttonTWarpActiveColor
+							textColor = preset.buttonTWarpActiveColor
 						end
 					end
 
 					calculatedDist = getSuDistance(moon.center)
 
-					html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..buttonWidth..[[" y="]]..(moon.button.y)..[[" x="]]..(moon.button.x)..[[" stroke-width="]]..buttonStroke..[[" stroke="]]..buttonBorderColor..[[" fill="]]..backColor..[["/>]]
-					html = html..[[<text class="btext" y="]]..(moon.button.y+(buttonHeight/2)+20-buttonStroke*2)..[[" x="]]..(moon.button.x+10)..[[" fill="]]..textColor..[[">]]..moon.name..[[</text>]]
-					html = html..[[<text class="bdtext" y="]]..(moon.button.y+(buttonHeight/2)+20-buttonStroke*2)..[[" x="]]..(moon.button.x-10+buttonWidth)..[[" fill="]]..textColor..[[">]]..string.format("%.1f", calculatedDist)..[[</text>]]
 
+					borderColor = preset.buttonBorderColor
+
+					if screenObject.hover == moon.button then
+						borderColor = preset.buttonBorderHoverColor
+					end
+
+					html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..buttonWidth..[[" y="]]..(moon.button.y)..[[" x="]]..(moon.button.x)..[[" stroke-width="]]..buttonStroke..[[" stroke="#]]..borderColor..[[" fill="#]]..backColor..[["/>]]
+					html = html..[[<text class="btext" y="]]..(moon.button.y+(buttonHeight/2)+15-buttonStroke*2)..[[" x="]]..(moon.button.x+10)..[[" fill="#]]..textColor..[[">]]..moon.name..[[</text>]]
+					html = html..[[<text class="bdtext" y="]]..(moon.button.y+(buttonHeight/2)+15-buttonStroke*2)..[[" x="]]..(moon.button.x-10+buttonWidth)..[[" fill="#]]..textColor..[[">]]..string.format("%.1f", calculatedDist)..[[</text>]]
 				end
 			end
 
 
-			textColor = buttonTInactiveColor
+			textColor = preset.buttonTInactiveColor
 
 			for i, button in ipairs(weightScreenButtons) do
 
-				backColor = buttonBInactiveColor
+				backColor = preset.buttonBInactiveColor
 				if screenObject.weightButtonClicked == button and screenObject.mouseDown then
-					backColor = "#30786B"
+					backColor = "30786B"
 				end
 
-				html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..button.width..[[" y="]]..button.y..[[" x="]]..button.x..[[" stroke-width="]]..buttonStroke..[[" stroke="]]..buttonBorderColor..[[" fill="]]..backColor..[["/>]]
+				borderColor = preset.buttonBorderColor
+
+				if screenObject.hover == button then
+					borderColor = preset.buttonBorderHoverColor
+				end
+
+				html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..button.width..[[" y="]]..button.y..[[" x="]]..button.x..[[" stroke-width="]]..buttonStroke..[[" stroke="#]]..borderColor..[[" fill="#]]..backColor..[["/>]]
 
 				change = button.change
 				if change > 0 then
 					change = "+"..change
 				end
-				html = html..[[<text class="btext" y="]]..(button.y+(buttonHeight/2)+20-buttonStroke*2)..[[" x="]]..(button.x+5)..[[" fill="]]..textColor..[[">]]..change..[[</text>]]
+				html = html..[[<text class="btext" y="]]..(button.y+(buttonHeight/2)+15-buttonStroke*2)..[[" x="]]..(button.x+5)..[[" fill="#]]..textColor..[[">]]..change..[[</text>]]
 			end
+
+
+
+			borderColor = preset.buttonBorderColor
+
+			if screenObject.hover == presetButton then
+				borderColor = preset.buttonBorderHoverColor
+			end
+
+			html = html..[[<rect rx="0" height="]]..presetButton.height..[[" width="]]..presetButton.width..[[" y="]]..presetButton.y..[[" x="]]..presetButton.x..[[" stroke-width="]]..buttonStroke..[[" stroke="#]]..borderColor..[[" fill="#]]..preset.buttonBInactiveColor..[["/>]]
+			html = html..[[<text text-anchor="middle" class="planet" font-size="3vh" y="]]..(presetButton.y+(presetButton.height/2)+10-buttonStroke*2)..[[" x="]]..(presetButton.x+(presetButton.width/2))..[[" fill="#]]..textColor..[[">]]..presetButton.preset..[[</text>]]
+
 		end
 
 		totalCells = warpmath+warpmathBack
 
 
-		if string.len(warpCostColor) < 3 then
-			wrpCostColor = "#9cfd80"
-
-			if warpDriveCells ~= nill then
-				if totalCells <= warpDriveCells - 10 then
-					wrpCostColor = "#08f600"
-				elseif totalCells >= warpDriveCells - 2 and totalCells < warpDriveCells then
-					wrpCostColor = "#ceffc0"
-				elseif totalCells == warpDriveCells then
-					wrpCostColor = "#fcfd80"
-				elseif totalCells > warpDriveCells then
-					wrpCostColor = "#ff0000"
-				end
-			end
-		else
-			wrpCostColor = warpCostColor
-		end
+		--		if string.len(warpCostColor) < 3 then
+		--			wrpCostColor = "#9cfd80"
+		--
+		--			if warpDriveCells ~= nill then
+		--				if totalCells <= warpDriveCells - 10 then
+		--					wrpCostColor = "#08f600"
+		--				elseif totalCells >= warpDriveCells - 2 and totalCells < warpDriveCells then
+		--					wrpCostColor = "#ceffc0"
+		--				elseif totalCells == warpDriveCells then
+		--					wrpCostColor = "#fcfd80"
+		--				elseif totalCells > warpDriveCells then
+		--					wrpCostColor = "#ff0000"
+		--				end
+		--			end
+		--		else
+		wrpCostColor = preset.warpCostColor
+		--		end
 
 
 		if warpDriveCells ~= nill then
@@ -690,13 +987,17 @@ function updateButtons(auto)
 
 		if screenObject.mapViewState ~= 2 then
 			if screenObject.route ~= nill and #screenObject.route > 1 then
-				routeOffset = 0
+				routeY = buttonLowY + buttonHeight*3+buttonSpacing
+				routeX = "1%"
+				routeAnchor = "start"
 
 				if screenObject.mapViewState == 3 or screenObject.mapViewState == 4 then
-					routeOffset = 140
+					routeX = "99%"
+					routeY = screenHeight-70
+					routeAnchor = "end"
 				end
 
-				html = html..[[<text text-anchor="end" class="mediumtext" y="]]..(460+routeOffset)..[[" x="99%">New Su: ]]..newDistance..[[</text>]]
+				html = html..[[<text text-anchor="]]..routeAnchor..[[" class="mediumtext" y="]]..(routeY+60)..[[" x="]]..routeX..[[">New Su: ]]..newDistance..[[</text>]]
 				fromName = screenObject.route[1].button.name
 				if screenObject.route[1].sourcePlanet == nill then
 					fromName = screenObject.route[1].name
@@ -705,8 +1006,8 @@ function updateButtons(auto)
 				if screenObject.route[2].sourcePlanet == nill then
 					toName = screenObject.route[2].name
 				end
-				html = html..[[<text text-anchor="end" class="mediumtext" y="]]..(400+routeOffset)..[[" x="99%">]]..fromName..[[</text>]]
-				html = html..[[<text text-anchor="end" class="mediumtext" y="]]..(430+routeOffset)..[[" x="99%">]]..toName..[[</text>]]
+				html = html..[[<text text-anchor="]]..routeAnchor..[[" class="mediumtext" y="]]..(routeY)..[[" x="]]..routeX..[[">]]..fromName..[[</text>]]
+				html = html..[[<text text-anchor="]]..routeAnchor..[[" class="mediumtext" y="]]..(routeY+30)..[[" x="]]..routeX..[[">]]..toName..[[</text>]]
 			end
 
 			html = html..[[<text class="mediumtext" y="540" x="1%">Dist: ]]..dist..
@@ -716,19 +1017,35 @@ function updateButtons(auto)
 		end
 
 		if screenObject.mapViewState == 1 then
-			html = html..[[<text text-anchor="end" class="mediumtext" y="260" x="99%">Warp Cost: ]]..warpmath..
-				[[</text><text text-anchor="end" class="mediumtext" y="290" x="99%">Back Cost: ]]..warpmathBack..
-				[[</text><text text-anchor="end" class="mediumtext" y="320" x="99%" style="fill:]]..wrpCostColor..
-				[[">Total: ]]..totalCells..
-				[[</text><text text-anchor="end" class="mediumtext" y="510" x="99%">Weight: ]]..constructWeight..
-				[[ T</text><text text-anchor="end" class="mediumtext" y="540" x="99%">Back Weight: ]]..math.floor(constructWeight+screenObject.extraWeight)..
+			html = html..[[<text text-anchor="end" class="mediumtext" y="200" x="99%">Warp Cost: ]]..warpmath..
+				[[</text><text text-anchor="end" class="mediumtext" y="230" x="99%">Back Cost: ]]..warpmathBack..
+				[[</text><text text-anchor="end" class="mediumtext" y="260" x="99%" style="fill:#]]..wrpCostColor..
+				[[">Total: ]]..totalCells..[[</text>]]..
+
+
+
+
+				[[<text text-anchor="end" class="mediumtext" y="310" x="99%">TLOC</text>]]..
+				[[<text text-anchor="end" class="mediumtext" y="340" x="99%">]]..string.format("%.2f", calculatedDist-lessWarpDistance)..[[SU</text>]]..
+				[[<text text-anchor="end" class="mediumtext" y="370" x="99%" style="fill:#]]..wrpCostColor..[[">]]..string.format("%.2f",constructWeight-lessWarpWeight)..[[T</text>]]..
+
+
+				[[<text text-anchor="end" class="mediumtext" y="530" x="99%">Weight: ]]..constructWeight..
+				[[ T</text><text text-anchor="end" class="mediumtext" y="560" x="99%">Back Weight: ]]..math.floor(constructWeight+screenObject.extraWeight)..
 				[[ T</text>]]
 		elseif screenObject.mapViewState == 4 then
 			html = html..[[<text class="mediumtext" y="30" x="1%">Warp Cost: ]]..warpmath..[[</text>]]..
 				[[<text class="mediumtext" y="60" x="1%">Back Cost: ]]..warpmathBack..[[</text>]]..
-				[[<text class="mediumtext" y="90" x="1%" style="fill:]]..wrpCostColor..[[">Total: ]]..totalCells..[[</text>]]..
+				[[<text class="mediumtext" y="90" x="1%" style="fill:#]]..wrpCostColor..[[">Total: ]]..totalCells..[[</text>]]..
 				[[<text text-anchor="end" class="mediumtext" y="30" x="99%">Weight: ]]..constructWeight..[[ T</text>]]..
 				[[<text text-anchor="end" class="mediumtext" y="60" x="99%">Back Weight: ]]..math.floor(constructWeight+screenObject.extraWeight)..[[ T</text>]]
+
+
+			html = html..[[<text class="mediumtext" y="130" x="1%">TLOC</text>]]..
+				[[<text class="mediumtext" y="160" x="1%">]]..string.format("%.2f", calculatedDist-lessWarpDistance)..[[SU</text>]]..
+				[[<text class="mediumtext" y="190" x="1%" style="fill:#]]..wrpCostColor..[[">]]..string.format("%.2f",constructWeight-lessWarpWeight)..[[T</text>]]
+
+
 		end
 
 		html = html ..[[</svg>]]
@@ -741,7 +1058,7 @@ function updateButtons(auto)
 end
 
 function getPointOnMap(rotationX, rotationY, rotationZ, screenObject, vector)
-	point = {x = vector.x*screenObject.scale - screenObject.mapCenterPoint.x, y = vector.y*screenObject.scale - screenObject.mapCenterPoint.y, z = vector.z*screenObject.scale - screenObject.mapCenterPoint.z}
+	point = {x = vector.x*screenObject.scale - screenObject.mapCenterPoint.x*screenObject.scale, y = vector.y*screenObject.scale - screenObject.mapCenterPoint.y*screenObject.scale, z = vector.z*screenObject.scale - screenObject.mapCenterPoint.z*screenObject.scale}
 
 	point =  matmul(rotationZ, point)
 	point =  matmul(rotationY, point)
@@ -763,211 +1080,251 @@ function getPointOnMap(rotationX, rotationY, rotationZ, screenObject, vector)
 	return {x = point.x + screenObject.screenCenterX, y = point.y + screenObject.screenCenterY, z = point.z, planet = planet, r = 5}
 end
 
+function updateScreen3d(screenObject, auto)
+
+	globalLoc = vec3(core.getConstructWorldPos())
+	--   globalLoc = vec3(-94134464.000, 12765536.000, -3634464.000)
+	constructLoc  = {x = globalLoc.x/400000, y = (globalLoc.y/400000), z = globalLoc.z/400000}
+
+	updateSC3d(screenObject, auto)
+
+end
 
 function update3d(auto)
 
 	globalLoc = vec3(core.getConstructWorldPos())
-	--  globalLoc = vec3(-94134464.000, 12765536.000, -3634464.000)
+	--   globalLoc = vec3(-94134464.000, 12765536.000, -3634464.000)
 	constructLoc  = {x = globalLoc.x/400000, y = (globalLoc.y/400000), z = globalLoc.z/400000}
 
 	for _,screenObject in ipairs(screens) do
+		updateSC3d(screenObject, auto)
+	end
+end
 
-		--    screenObject.mapCenterPoint = {x = globalLoc.x/400000, y = (globalLoc.y/400000), z = globalLoc.z/400000}
+function updateSC3d(screenObject, auto)
 
-		if screenObject.mapViewState ~= 1 then
-			screenObject.screenCenterX = screenWidth / 2
-			screenObject.screenCenterY = screenHeight / 2
-			screenObject.scale = zoomScale
-		else
-			screenObject.screenCenterX = screenWidth / 2
-			screenObject.screenCenterY = screenHeight - (screenHeight / 3)
-			screenObject.scale = 1
-		end
+	--		  screenObject.mapCenterPoint = {x = globalLoc.x/400000, y = (globalLoc.y/400000), z = globalLoc.z/400000}
 
-		--    if auto then
-		--      screenObject.angle = screenObject.angle + 0.01
-		--      screenObject.pitch = screenObject.pitch + 0.01
-		--      screenObject.yaw = screenObject.yaw + 0.01
-		--    end
+	if screenObject.mapViewState ~= 1 then
+		screenObject.screenCenterX = screenWidth / 2
+		screenObject.screenCenterY = screenHeight / 2
+		screenObject.scale = screenObject.zoomScale
+	else
+		screenObject.screenCenterX = screenWidth / 2
+		screenObject.screenCenterY = screenHeight - (screenHeight / 2.7)
+		screenObject.scale = 1
+	end
 
-		--    screenObject.scale = screenObject.scale + 0.05
+	--    if auto then
+	--      screenObject.angle = screenObject.angle + 0.01
+	--      screenObject.pitch = screenObject.pitch + 0.01
+	--      screenObject.yaw = screenObject.yaw + 0.01
+	--    end
 
-		cosX = math.cos(screenObject.angle)
-		sinX = math.sin(screenObject.angle)
-		rotationX = {
+	--    screenObject.scale = screenObject.scale + 0.05
+
+	cosX = math.cos(screenObject.angle)
+	sinX = math.sin(screenObject.angle)
+	rotationX = {
+		{1, 0, 0},
+		{0, cosX, -sinX},
+		{0, sinX, cosX}
+	}
+
+	cosY = math.cos(screenObject.pitch)
+	sinY = math.sin(screenObject.pitch)
+	rotationY = {
+		{cosY, 0, -sinY},
+		{0, 1, 0},
+		{sinY, 0, cosY}
+	}
+
+	cosZ = math.cos(screenObject.yaw)
+	sinZ = math.sin(screenObject.yaw)
+	rotationZ = {
+		{cosZ, -sinZ, 0},
+		{sinZ, cosZ, 0},
+		{0, 0, 1}
+	}
+
+	html = style..[[<svg width="100%" height="100%" viewBox="0 0 ]]..screenWidth..[[ ]]..screenHeight..[[">]]
+
+
+
+	html = html..[[<rect fill="#]]..preset.backGroundColor..[[" height="]]..screenHeight..[[" width="]]..screenWidth..[[" y="0" x="0"/>]]
+
+	newPoints = {}
+
+	screenObject.planetScreen = {}
+
+	for i, planet in ipairs(planets) do
+
+		point = {x = planet.mapCoords.x*screenObject.scale - screenObject.mapCenterPoint.x*screenObject.scale, y = planet.mapCoords.y*screenObject.scale - screenObject.mapCenterPoint.y*screenObject.scale, z = planet.mapCoords.z*screenObject.scale - screenObject.mapCenterPoint.z*screenObject.scale}
+
+
+		--      point = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, point)
+
+		point =  matmul(rotationZ, point)
+		point =  matmul(rotationY, point)
+		point =  matmul(rotationX, point)
+
+		distance = orDistance*screenObject.scale
+
+		z = 1 - (point.z)/400
+
+		projection = {
 			{1, 0, 0},
-			{0, cosX, -sinX},
-			{0, sinX, cosX}
-		}
-
-		cosY = math.cos(screenObject.pitch)
-		sinY = math.sin(screenObject.pitch)
-		rotationY = {
-			{cosY, 0, -sinY},
 			{0, 1, 0},
-			{sinY, 0, cosY}
-		}
-
-		cosZ = math.cos(screenObject.yaw)
-		sinZ = math.sin(screenObject.yaw)
-		rotationZ = {
-			{cosZ, -sinZ, 0},
-			{sinZ, cosZ, 0},
 			{0, 0, 1}
 		}
+		point =  matmul(projection, point)
 
-		html = style..[[<svg width="100%" height="100%" viewBox="0 0 ]]..screenWidth..[[ ]]..screenHeight..[[">]]
+		r = 10 - point.z/50
+		font = 6 - (0.8 * (point.z/10 + mapSize*(screenObject.scale+1)) / distance)
 
-		html = html..[[<rect fill="]]..backGroundColor..[[" height="]]..screenHeight..[[" width="]]..screenWidth..[[" y="0" x="0"/>]]
+		--    if planet.name == "Symeon" then
+		--      system.print(point.z.." "..r.." "..screenObject.scale.. "  ".. font)
+		--    end
 
-		newPoints = {}
-
-		screenObject.planetScreen = {}
-
-		for i, planet in ipairs(planets) do
-
-			point = {x = planet.mapCoords.x*screenObject.scale - screenObject.mapCenterPoint.x, y = planet.mapCoords.y*screenObject.scale - screenObject.mapCenterPoint.y, z = planet.mapCoords.z*screenObject.scale - screenObject.mapCenterPoint.z}
-
-
-			--      point = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, point)
-
-			point =  matmul(rotationZ, point)
-			point =  matmul(rotationY, point)
-			point =  matmul(rotationX, point)
-
-			distance = orDistance*screenObject.scale
-			z = 1 - (point.z)/400
-			--
-			--      if z < 0.0 then
-			--        z = 0.0
-			--      end
-			--
-			--      if z > 1 then
-			--        z = 1
-			--      end
-
-			projection = {
-				{1, 0, 0},
-				{0, 1, 0},
-				{0, 0, 1}
-			}
-			point =  matmul(projection, point)
-
-			r = 10 - (4 * (point.z + mapSize*screenObject.scale) / distance)
-			font = 3 - (0.8 * (point.z + mapSize*(screenObject.scale+1)) / distance)
-
-			if r < 5 then
-				r = 5
-			end
-			if r > 10 then
-				r = 10
-			end
-
-			--      if font < 2 then
-			--      font = 3
-			--      end
-
-			newPoints[i] = {x = point.x + screenObject.screenCenterX, y = point.y + screenObject.screenCenterY, z = point.z, planet = planet, r = r, font = font}
-
-
-			table.insert(screenObject.planetScreen,planet.button.id, {x = newPoints[i].x, y = newPoints[i].y})
-
-
-			if planet.drawZero then
-				newPoints[i].zeroPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, {x = planet.mapCoords.x, y = planet.mapCoords.y, z = 0})
-			end
-
+		if r < 5 then
+			r = 5
+		end
+		if r > 15 then
+			r = 15
 		end
 
-		table.sort(newPoints, compare)
+		--      if font < 2 then
+		--      font = 3
+		--      end
 
-		degreeY = -(screenObject.pitch * (180/math.pi))
-		degreeX = screenObject.angle * (180/math.pi)
-		degreeZ = -(screenObject.yaw * (180/math.pi))
 
-		if  degreeY < -360 then
-			screenObject.pitch = 0
+		newPoints[i] = {x = point.x + screenObject.screenCenterX, y = point.y + screenObject.screenCenterY, z = point.z, planet = planet, r = r, font = font}
+
+
+		table.insert(screenObject.planetScreen,planet.button.id, {x = newPoints[i].x, y = newPoints[i].y})
+
+
+		if planet.drawZero then
+			newPoints[i].zeroPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, {x = planet.mapCoords.x, y = planet.mapCoords.y, z = 0})
 		end
 
-		if  degreeX > 360 then
-			screenObject.angle = 0
-		end
+	end
 
-		if  degreeZ > 360 then
-			screenObject.yaw = 0
-		end
+	table.sort(newPoints, compare)
 
-		rotationSide = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, {x=0, y = 0, z= 10})
+	degreeY = -(screenObject.pitch * (180/math.pi))
+	degreeX = screenObject.angle * (180/math.pi)
+	degreeZ = -(screenObject.yaw * (180/math.pi))
 
-		mapStrokeColor = mapCircleColor
+	if  degreeY < -360 then
+		screenObject.pitch = 0
+	end
 
-		if rotationSide.z < 0 then
-			mapStrokeColor = mapBCircleColor
-		end
+	if  degreeX > 360 then
+		screenObject.angle = 0
+	end
 
-		html = html..[[<g fill="none" stroke-width="]]..mapCircleThickness..[[" style="stroke: ]]..mapStrokeColor..[[; stroke-opacity: 0.3; fill-opacity:0.3; transform-origin: ]]..toScreenCordsX(screenObject.screenCenterX)..[[% ]]..toScreenCordsY(screenObject.screenCenterY)..[[% 0px;transform: rotateX(]]..degreeX..[[deg) rotateY(]]..degreeY..[[deg) rotateZ(]]..degreeZ..[[deg);">]]
-		html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(300*screenObject.scale)..[[%"></circle>]]
-		html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(250*screenObject.scale)..[[%"></circle>]]
-		html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(200*screenObject.scale)..[[%"></circle>]]
-		html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(150*screenObject.scale)..[[%"></circle>]]
-		html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(100*screenObject.scale)..[[%"></circle>]]
-		html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(50*screenObject.scale)..[[%"></circle>]]
-		html = html..[[</g>]]
+	if  degreeZ > 360 then
+		screenObject.yaw = 0
+	end
 
-		--    degreeY = degreeY -45
-		--    html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(250)..[[%" fill="none" stroke-width="0.8em" style="stroke: ]]..mapStrokeColor..[[; stroke-opacity: 0.6; fill-opacity:0.8; transform-origin: 50% 50% 0px;transform: rotateX(]]..degreeX..[[deg) rotateY(]]..degreeY..[[deg) rotateZ(]]..degreeZ..[[deg);"></circle>]]
+	rotationSide = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, {x=0, y = 0, z= 10})
+
+	mapStrokeColor = preset.mapCircleColor
+
+	if rotationSide.z < 0 then
+		mapStrokeColor = preset.mapBCircleColor
+	end
 
 
-		if screenObject.route ~= nill then
-			previousPoint = constructLoc
-			for i, planet in ipairs(screenObject.route) do
-				if planet ~= nill then
+	opacity = 0.3
 
-					originPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, previousPoint)
-					distinationPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, planet.mapCoords)
+	if screenObject.hover == "circle" then
+		--			mapStrokeColor = preset.buttonBorderHoverColor
+		opacity = 0.6
+	end
 
-					dashArray = "40 10 30 10 20 10"
-					if screenObject.timer > 2 then
-						screenObject.timer = 0
-					end
-					screenObject.timer = screenObject.timer + 1
+	html = html..[[<g fill="none" stroke-width="]]..mapCircleThickness..[[" style="stroke: #]]..mapStrokeColor..[[; stroke-opacity: ]]..opacity..[[; fill-opacity:0.3; transform-origin: ]]..toScreenCordsX(screenObject.screenCenterX)..[[% ]]..toScreenCordsY(screenObject.screenCenterY)..[[% 0px;transform: rotateX(]]..degreeX..[[deg) rotateY(]]..degreeY..[[deg) rotateZ(]]..degreeZ..[[deg);">]]
+	html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords((SU100*6)*screenObject.scale)..[[%"></circle>]]
+	html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords((SU100*5)*screenObject.scale)..[[%"></circle>]]
+	html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords((SU100*4)*screenObject.scale)..[[%"></circle>]]
+	html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords((SU100*3)*screenObject.scale)..[[%"></circle>]]
+	html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords((SU100*2)*screenObject.scale)..[[%"></circle>]]
+	html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(SU100*screenObject.scale)..[[%"></circle>]]
+	html = html..[[</g>]]
 
-					html = html..[[<line stroke-linecap="undefined" stroke-linejoin="undefined" stroke-dasharray="]]..dashArray..[[" y2="]]..toScreenCordsY(distinationPoint.y)..[[%" x2="]]..toScreenCordsX(distinationPoint.x)..[[%" y1="]]..toScreenCordsY(originPoint.y)..[[%" x1="]]..toScreenCordsX(originPoint.x)..[[%" stroke-opacity="0.9" stroke-width="5" stroke="]]..pathColor..[[" fill="none" fill-opacity="0"/>]]
+	--    degreeY = degreeY -45
+	--    html = html..[[<circle cx="]]..(toScreenCordsX(screenObject.screenCenterX))..[[%" cy="]]..(toScreenCordsY(screenObject.screenCenterY))..[[%" r="]]..toScreenCords(250)..[[%" fill="none" stroke-width="0.8em" style="stroke: ]]..mapStrokeColor..[[; stroke-opacity: 0.6; fill-opacity:0.8; transform-origin: 50% 50% 0px;transform: rotateX(]]..degreeX..[[deg) rotateY(]]..degreeY..[[deg) rotateZ(]]..degreeZ..[[deg);"></circle>]]
 
+
+	if showSafeZone then
+		constructPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, safeZoneCenter)
+		html = html..[[<circle cx="]]..(toScreenCordsX(constructPoint.x))..[[%" cy="]]..(toScreenCordsY(constructPoint.y))..[[%" r="]]..toScreenCords(safeZoneSize*screenObject.scale)..[[%" class="circle" style="fill:#]]..preset.mapConstructColor..[[; stroke: #]]..preset.mapConstructSColor..[[; stroke-opacity: 0.3; fill-opacity: 0.2"></circle>]]
+	end
+
+	--		constructPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, edge)
+	--		html = html..[[<circle cx="]]..(toScreenCordsX(constructPoint.x))..[[%" cy="]]..(toScreenCordsY(constructPoint.y))..[[%" r="]]..toScreenCords(2)..[[%" class="circle" style="fill:]]..mapConstructColor..[[; stroke: ]]..mapConstructSColor..[[; stroke-opacity: 0.3; fill-opacity: 0.2"></circle>]]
+
+
+
+	if screenObject.route ~= nill then
+		previousPoint = constructLoc
+		for i, planet in ipairs(screenObject.route) do
+			if planet ~= nill then
+
+				originPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, previousPoint)
+				distinationPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, planet.mapCoords)
+
+				dashArray = "40 10 30 10 20 10"
+				if screenObject.timer > 2 then
+					screenObject.timer = 0
 				end
-				previousPoint = planet.mapCoords
+				screenObject.timer = screenObject.timer + 1
+
+				html = html..[[<line stroke-linecap="undefined" stroke-linejoin="undefined" animation="dash 5s linear" stroke-dasharray="]]..dashArray..[[" y2="]]..toScreenCordsY(distinationPoint.y)..[[%" x2="]]..toScreenCordsX(distinationPoint.x)..[[%" y1="]]..toScreenCordsY(originPoint.y)..[[%" x1="]]..toScreenCordsX(originPoint.x)..[[%" stroke-opacity="0.9" stroke-width="5" stroke="#]]..preset.pathColor..[[" fill="none" fill-opacity="0"/>]]
+
 			end
+			previousPoint = planet.mapCoords
 		end
+	end
 
-		for i, planetPoint in ipairs(newPoints) do
-			if planetPoint.planet ~= nill then
+	for i, planetPoint in ipairs(newPoints) do
+		if planetPoint.planet ~= nill then
 
-				if planetPoint.zeroPoint ~= nill then
-					html = html..[[<line stroke-linecap="undefined" stroke-linejoin="undefined" y2="]]..toScreenCordsY(planetPoint.y)..[[%" x2="]]..toScreenCordsX(planetPoint.x)..[[%" y1="]]..toScreenCordsY(planetPoint.zeroPoint.y)..[[%" x1="]]..toScreenCordsX(planetPoint.zeroPoint.x)..[[%" stroke-width="2" stroke-opacity="0.3" stroke="]]..planetOffsetColor..[[" fill="none" fill-opacity="0.5"/>]]
-				end
-
-				plColor = planetPoint.planet.color
-
-				if string.len(planetColor) > 2 then
-					plColor = planetColor;
-				end
-
-				html = html..[[<circle cx="]]..(toScreenCordsX(planetPoint.x))..[[%" cy="]]..(toScreenCordsY(planetPoint.y))..[[%" r="]]..toScreenCords(planetPoint.r)..[[%" class="circle" style="fill:]]..plColor..[[; stroke-opacity: 0.5; fill-opacity: 1"></circle>]]
-				html = html..[[<text x="]]..tostring(toScreenCordsX(planetPoint.x))..[[%" y="]]..tostring(toScreenCordsY( planetPoint.y))..[[%" class="minitext" font-family="Arial" font-size="]]..planetPoint.font..[[em" fill="white">]]..planetPoint.planet.name..[[</text>]]
+			if planetPoint.zeroPoint ~= nill then
+				html = html..[[<line stroke-linecap="undefined" stroke-linejoin="undefined" y2="]]..toScreenCordsY(planetPoint.y)..[[%" x2="]]..toScreenCordsX(planetPoint.x)..[[%" y1="]]..toScreenCordsY(planetPoint.zeroPoint.y)..[[%" x1="]]..toScreenCordsX(planetPoint.zeroPoint.x)..[[%" stroke-width="2" stroke-opacity="0.3" stroke="#]]..preset.planetOffsetColor..[[" fill="none" fill-opacity="0.5"/>]]
 			end
+
+			plColor = planetPoint.planet.color
+
+			if string.len(preset.planetColor) > 2 then
+				plColor = preset.planetColor;
+			end
+
+			local planetSize = planetPoint.r
+
+			if screenObject.mapViewState ~= 1 then
+				planetSize = planetSize*screenObject.zoomScale
+			end
+
+			local fontSize = planetPoint.font
+			if screenObject.hover ~= nill and screenObject.hover == planetPoint.planet then
+				planetSize = planetSize * 1.5
+				fontSize = fontSize * 1.5
+			end
+			html = html..[[<circle cx="]]..(toScreenCordsX(planetPoint.x))..[[%" cy="]]..(toScreenCordsY(planetPoint.y))..[[%" r="]]..toScreenCords(planetSize)..[[%" class="circle" style="fill:#]]..plColor..[[; stroke-opacity: 0.5; fill-opacity: 1"></circle>]]
+			html = html..[[<text x="]]..tostring(toScreenCordsX(planetPoint.x))..[[%" y="]]..tostring(toScreenCordsY( planetPoint.y))..[[%" class="minitext" font-family="Arial" font-size="]]..fontSize..[[vh" fill="white">]]..planetPoint.planet.name..[[</text>]]
 		end
+	end
 
-		constructPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, constructLoc)
-		html = html..[[<circle cx="]]..(toScreenCordsX(constructPoint.x))..[[%" cy="]]..(toScreenCordsY(constructPoint.y))..[[%" r="]]..toScreenCords(constructPoint.r)..[[%" class="circle" style="fill:]]..mapConstructColor..[[; stroke: ]]..mapConstructSColor..[[; stroke-opacity: 0.5; fill-opacity: 1"></circle>]]
+	constructPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, constructLoc)
+	html = html..[[<circle cx="]]..(toScreenCordsX(constructPoint.x))..[[%" cy="]]..(toScreenCordsY(constructPoint.y))..[[%" r="]]..toScreenCords(constructPoint.r)..[[%" class="circle" style="fill:#]]..preset.mapConstructColor..[[; stroke: ]]..preset.mapConstructSColor..[[; stroke-opacity: 0.5; fill-opacity: 1"></circle>]]
 
-
-
-		html = html ..[[</svg>]]
-		if screenObject.mapContentId == nill then
-			screenObject.mapContentId = screenObject.screen.addContent(0, 0, html)
-		else
-			screenObject.screen.resetContent(screenObject.mapContentId, html)
-		end
+	html = html ..[[</svg>]]
+	if screenObject.mapContentId == nill then
+		screenObject.mapContentId = screenObject.screen.addContent(0, 0, html)
+	else
+		screenObject.screen.resetContent(screenObject.mapContentId, html)
 	end
 end
 
@@ -1048,6 +1405,22 @@ function evaluateButtons(x, y, pressDown, screen)
 						end
 					end
 				end
+
+				if clickCoordX > presetButton.x-buttonStrokeHalf and clickCoordX < presetButton.x + presetButton.width+buttonStrokeHalf and clickCoordY > presetButton.y-buttonStrokeHalf and clickCoordY < presetButton.y + presetButton.height+buttonStrokeHalf then
+					if not pressDown then
+						presetButton.preset = presetButton.preset + 1
+						if presetButton.preset > #presets then
+							presetButton.preset = 1
+						end
+						savepreset()
+						updatePreset()
+						updateStyle()
+						update3d(false)
+						updateButtons(false)
+					end
+				end
+
+
 			end
 
 			if screenObject.changeView and not pressDown then
@@ -1057,7 +1430,8 @@ function evaluateButtons(x, y, pressDown, screen)
 						screenObject.mapViewState = 1
 					end
 				else
-					if clickCoordX > (screenWidth / 2) - 200 and  clickCoordX < (screenWidth / 2) + 200 and clickCoordY > (screenHeight / 2) and  clickCoordY < (screenHeight / 2) + 200 then
+
+					if clickCoordX > (screenWidth / 2) - 400 and  clickCoordX < (screenWidth / 2) + 400 and clickCoordY > (screenHeight / 3) and  clickCoordY < (screenHeight / 2) + 200 then
 						screenObject.mapViewState = 2
 					end
 				end
@@ -1073,6 +1447,8 @@ function evaluateButtons(x, y, pressDown, screen)
 	end
 end
 
+rotatelimit = 2
+
 function mapRotate()
 
 	local someOneHolding = false
@@ -1083,9 +1459,11 @@ function mapRotate()
 			changed = false;
 			if (screenObject.screen.prevMouseX ~= nil and screenObject.screen.getMouseX() > 0 and screenObject.screen.getMouseY() > 0) then
 
-
 				difX = (screenObject.screen.prevMouseX - screenObject.screen.getMouseX()*screenWidth)
 				difY = (screenObject.screen.prevMouseY - screenObject.screen.getMouseY()*screenHeight)
+
+				screenObject.screen.difX = difX
+				screenObject.screen.difY = difY
 
 				if (screenObject.screen.getMouseY() > 0.85 and screenObject.mapViewState ~= 1) then
 					if (difX < 20 or difX > -20) then
@@ -1096,7 +1474,7 @@ function mapRotate()
 						update3d(false)
 					end
 				elseif (screenObject.screen.getMouseX() < 0.15 and screenObject.mapViewState ~= 1) then
-					if ((difY < 20 or difY > -20) and (difY > 0.5 or difY < -0.5)) then
+					if ((difY < 20 or difY > -20) and (difY > 0.8 or difY < -0.8)) then
 						screenObject.angle = screenObject.angle - (difY / 200)
 						changed = true
 					end
@@ -1104,7 +1482,7 @@ function mapRotate()
 						update3d(false)
 					end
 				elseif (screenObject.screen.getMouseY() < 0.15 and screenObject.mapViewState ~= 1) then
-					if (difX < 20 or difX > -20) and (difX > 0.5 or difX < -0.5) then
+					if (difX < 20 or difX > -20) and (difX > 0.8 or difX < -0.8) then
 						screenObject.pitch = screenObject.pitch - (difX / 200)
 						changed = true
 					end
@@ -1112,12 +1490,12 @@ function mapRotate()
 						update3d(false)
 					end
 				else
-					if (difX < 20 or difX > -20) and (difX > 0.5 or difX < -0.5) then
+					if (difX < 20 or difX > -20) and (difX > 1 or difX < -1) then
 						screenObject.pitch = screenObject.pitch - (difX / 200)
 						changed = true
 					end
 
-					if ((difY < 20 or difY > -20) and (difY > 0.5 or difY < -0.5)) then
+					if ((difY < 20 or difY > -20) and (difY > 1 or difY < -1)) then
 						screenObject.angle = screenObject.angle - (difY / 200)
 						changed = true
 					end
@@ -1142,10 +1520,51 @@ function mapRotate()
 				screenObject.screen.prevMouseY = nill
 			end
 		else
-			save(screenObject)
-			screenObject.changeView = true
+
 			screenObject.screen.prevMouseX = nill
 			screenObject.screen.prevMouseY = nill
+
+			if (screenObject.screen.difX ~= 0 or screenObject.screen.difY ~= 0) and screenObject.screen.difX ~= nill and screenObject.screen.difY ~= nill
+				and (screenObject.screen.difX < -rotatelimit or screenObject.screen.difX > rotatelimit
+				or (screenObject.screen.difY < -rotatelimit or screenObject.screen.difY > rotatelimit))
+			then
+
+				someOneHolding = true
+				screenObject.screen.difX = screenObject.screen.difX / 1.2
+				--				screenObject.screen.prevMouseX =screenObject.screen.prevMouseX+screenObject.screen.difX
+
+				if screenObject.screen.difX > -rotatelimit and screenObject.screen.difX < rotatelimit then
+					screenObject.screen.difX = 0
+				end
+				screenObject.screen.difY = screenObject.screen.difY / 1.2
+				--        screenObject.screen.prevMouseY =screenObject.screen.prevMouseY+screenObject.screen.difY
+				if screenObject.screen.difY > -rotatelimit and screenObject.screen.difY < rotatelimit then
+					screenObject.screen.difY = 0
+				end
+
+				if screenObject.screen.difX == 0 and screenObject.screen.difY == 0 then
+					someOneHolding = false
+				end
+
+				if (screenObject.screen.difX < 20 or screenObject.screen.difX > -20) and (screenObject.screen.difX > rotatelimit or screenObject.screen.difX < -rotatelimit) then
+					screenObject.pitch = screenObject.pitch - (screenObject.screen.difX / 200)
+					changed = true
+				end
+
+				if ((screenObject.screen.difY < 20 or screenObject.screen.difY > -20) and (screenObject.screen.difY > rotatelimit or screenObject.screen.difY < -rotatelimit)) then
+					screenObject.angle = screenObject.angle - (screenObject.screen.difY / 200)
+					changed = true
+				end
+				if changed then
+					update3d(false)
+				end
+
+
+
+			else
+				save(screenObject)
+				screenObject.changeView = true
+			end
 		end
 	end
 
@@ -1155,10 +1574,148 @@ function mapRotate()
 	end
 end
 
+hovertimer = 1
+
+zoomMax = 5
+zoomMin = 0.8
+
+function checkhover()
+	looking = false
+	for _,screenObject in ipairs(screens) do
+		screenLooking = false
+		local x = screenObject.screen.getMouseX()
+		if x ~= -1 then
+			local y = screenObject.screen.getMouseY()
+			if y ~= -1 then
+
+
+				if system.getMouseWheel() ~= 0 then
+					screenObject.targetZoomScale = screenObject.targetZoomScale+(system.getMouseWheel()/10)
+					if screenObject.targetZoomScale < zoomMin then
+						screenObject.targetZoomScale = zoomMin
+					end
+					if screenObject.targetZoomScale > zoomMax then
+						screenObject.targetZoomScale = zoomMax
+					end
+					update3d(screenObject, false)
+					save(screenObject)
+				end
+
+
+				if screenObject.targetZoomScale ~= screenObject.zoomScale then
+					zoomDif = screenObject.targetZoomScale - screenObject.zoomScale
+
+					if zoomDif < 0.01 and zoomDif > -0.01 then
+						screenObject.zoomScale = screenObject.targetZoomScale
+					else
+						zoomDif =zoomDif - ( zoomDif * 0.5)
+						screenObject.zoomScale = screenObject.zoomScale + zoomDif
+						updateScreen3d(screenObject, false)
+					end
+				end
+
+
+				looking = true
+				clickCoordX = x * screenWidth
+				clickCoordY = y * screenHeight
+				if hovertimer == 1 then
+					unit.setTimer("hoverdetect", updateHoverInterval)
+					hovertimer = updateHoverInterval
+				end
+				for i, planet in ipairs(planets) do
+					dpd = screenObject.planetScreen[planet.button.id]
+					if clickCoordX > dpd.x-20 and clickCoordX < dpd.x+20 and clickCoordY > dpd.y-20 and clickCoordY < dpd.y+20 then
+						screenObject.hover = planet
+						screenLooking = true
+						update3d(false)
+						return
+					end
+				end
+
+
+
+				if screenObject.mapViewState == 1 then
+					--        for i, v in ipairs(activeMoons) do activeMoons[i] = nil end
+					for i, planet in ipairs(planets) do
+						if clickCoordX > planet.button.x-buttonStrokeHalf and clickCoordX < planet.button.x + buttonWidth+buttonStrokeHalf and clickCoordY > planet.button.y-buttonStrokeHalf and clickCoordY < planet.button.y + buttonHeight+buttonStrokeHalf then
+							screenObject.hover = planet.button
+							screenLooking = true
+							updateButtons(false)
+
+						end
+					end
+
+					if screenObject.selectedPlanet ~= nill then
+						if screenObject.selectedPlanet.moons ~= nill then
+							for i, moon in ipairs(screenObject.selectedPlanet.moons) do
+								if clickCoordX > moon.button.x-buttonStrokeHalf and clickCoordX < moon.button.x + buttonWidth+buttonStrokeHalf and clickCoordY > moon.button.y-buttonStrokeHalf and clickCoordY < moon.button.y + buttonHeight+buttonStrokeHalf then
+									screenObject.hover = moon.button
+									screenLooking = true
+									updateButtons(false)
+								end
+							end
+						else
+							for i, moon in ipairs(screenObject.selectedPlanet.sourcePlanet.moons) do
+								if clickCoordX > moon.button.x-buttonStrokeHalf and clickCoordX < moon.button.x + buttonWidth+buttonStrokeHalf and clickCoordY > moon.button.y-buttonStrokeHalf and clickCoordY < moon.button.y + buttonHeight+buttonStrokeHalf then
+									screenObject.hover = moon.button
+									screenLooking = true
+									updateButtons(false)
+								end
+							end
+						end
+					end
+
+					if #weightScreenButtons >= 1 then
+						for i, button in ipairs(weightScreenButtons) do
+							if clickCoordX > button.x-buttonStrokeHalf and clickCoordX < button.x + button.width+buttonStrokeHalf and clickCoordY > button.y-buttonStrokeHalf and clickCoordY < button.y + buttonHeight+buttonStrokeHalf then
+								screenObject.hover = button
+								screenLooking = true
+								updateButtons(false)
+							end
+						end
+					end
+
+					if clickCoordX > presetButton.x-buttonStrokeHalf and clickCoordX < presetButton.x + presetButton.width+buttonStrokeHalf and clickCoordY > presetButton.y-buttonStrokeHalf and clickCoordY < presetButton.y + presetButton.height+buttonStrokeHalf then
+						if not pressDown then
+							screenObject.hover = presetButton
+							screenLooking = true
+							updateButtons(false)
+						end
+					end
+				end
+
+				if screenObject.mapViewState ~= 1 then
+
+				elseif clickCoordX > (screenWidth / 2) - 400 and  clickCoordX < (screenWidth / 2) + 400 and clickCoordY > (screenHeight / 3) and  clickCoordY < (screenHeight / 2) + 200 then
+					screenObject.hover = "circle"
+					screenLooking = true
+					update3d(false)
+				end
+			end
+		end
+
+		if screenObject.hover ~= nill and not screenLooking then
+			screenObject.hover = nill
+			update3d(false)
+			updateButtons(false)
+		end
+
+		if not screenLooking then
+			screenObject.hover = nill
+		end
+
+	end
+	if not looking then
+		unit.setTimer("hoverdetect", 1)
+		hovertimer = 1
+	end
+end
+
 for _,screenObject in ipairs(screens) do
 	screenObject.screen.clear()
 end
 update3d(false)
 updateButtons(false)
 unit.setTimer("spacemap", updateInterval)
-unit.hide();
+unit.setTimer("hoverdetect", 1)
+unit.hide()
