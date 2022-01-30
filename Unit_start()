@@ -710,6 +710,28 @@ function update(auto)
 	end
 end
 
+function getConstructMass()
+	return math.ceil(core.getConstructMass() / 1000)
+end
+
+function getBoardedShipsMass()
+	local dockedMass = 0
+	local constructIds = core.getDockedConstructs()
+	for i, cid in ipairs(constructIds) do
+		dockedMass = dockedMass + math.ceil(core.getDockedConstructMass(cid) / 1000)
+	end
+	return dockedMass
+end
+
+function getBoardedPlayerMass()
+	local dockedMass = 0
+	local playerIds = core.getPlayersOnBoard()
+	for i, pid in ipairs(playerIds) do
+		dockedMass = dockedMass + math.ceil(core.getBoardedPlayerMass(pid) / 1000)
+	end
+	return dockedMass
+end
+
 function updateButtons(auto)
 
 	updateCounter = updateCounter + 1
@@ -749,7 +771,9 @@ function updateButtons(auto)
 		shipVelocity = vec3(core.getVelocity()):len() * 3.6
 	end
 
-	constructWeight = math.ceil(core.getConstructMass() / 1000)
+	boardedWeight = getBoardedShipsMass() + getBoardedPlayerMass()
+
+	constructWeight = getConstructMass() + boardedWeight
 
 	if constructWeight < 2 and shipWeight > 2 then
 		constructWeight = shipWeight
@@ -1016,27 +1040,40 @@ function updateButtons(auto)
 				[[</text>]]
 		end
 
+
+
 		if screenObject.mapViewState == 1 then
+
+			local aditionalWeight = ""
+			if boardedWeight > 1 then
+				aditionalWeight =   [[<text text-anchor="end" class="mediumtext" y="500" x="99%">Boarded: ]]..boardedWeight.. [[T</text>]]
+			end
+
 			html = html..[[<text text-anchor="end" class="mediumtext" y="200" x="99%">Warp Cost: ]]..warpmath..
 				[[</text><text text-anchor="end" class="mediumtext" y="230" x="99%">Back Cost: ]]..warpmathBack..
 				[[</text><text text-anchor="end" class="mediumtext" y="260" x="99%" style="fill:#]]..wrpCostColor..
 				[[">Total: ]]..totalCells..[[</text>]]..
 
-
-
-
 				[[<text text-anchor="end" class="mediumtext" y="310" x="99%">TLOC</text>]]..
 				[[<text text-anchor="end" class="mediumtext" y="340" x="99%">]]..string.format("%.2f", calculatedDist-lessWarpDistance)..[[SU</text>]]..
 				[[<text text-anchor="end" class="mediumtext" y="370" x="99%" style="fill:#]]..wrpCostColor..[[">]]..string.format("%.2f",constructWeight-lessWarpWeight)..[[T</text>]]..
 
-
+				aditionalWeight..
 				[[<text text-anchor="end" class="mediumtext" y="530" x="99%">Weight: ]]..constructWeight..
 				[[ T</text><text text-anchor="end" class="mediumtext" y="560" x="99%">Back Weight: ]]..math.floor(constructWeight+screenObject.extraWeight)..
 				[[ T</text>]]
 		elseif screenObject.mapViewState == 4 then
+
+			local aditionalWeight = ""
+			if boardedWeight > 1 then
+				aditionalWeight =   [[<text text-anchor="end" class="mediumtext" y="90" x="99%">Boarded: ]]..boardedWeight.. [[T</text>]]
+			end
+
 			html = html..[[<text class="mediumtext" y="30" x="1%">Warp Cost: ]]..warpmath..[[</text>]]..
 				[[<text class="mediumtext" y="60" x="1%">Back Cost: ]]..warpmathBack..[[</text>]]..
 				[[<text class="mediumtext" y="90" x="1%" style="fill:#]]..wrpCostColor..[[">Total: ]]..totalCells..[[</text>]]..
+
+				aditionalWeight..
 				[[<text text-anchor="end" class="mediumtext" y="30" x="99%">Weight: ]]..constructWeight..[[ T</text>]]..
 				[[<text text-anchor="end" class="mediumtext" y="60" x="99%">Back Weight: ]]..math.floor(constructWeight+screenObject.extraWeight)..[[ T</text>]]
 
