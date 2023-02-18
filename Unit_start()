@@ -19,7 +19,6 @@ radarFullScreenScale = 50
 screens = {}
 databank = nill
 warpdrive = nill
-core = nill
 
 warpDriveDestinationPlanet = nill
 
@@ -29,11 +28,55 @@ updateHoverInterval = 0.05
 
 shipWeight = 0
 
+atlas = require("atlas")
+local coreAtlas = atlas[0]
+
+tonum = tonumber
+stringmatch = string.match
+
+local internalScale = 400000
+
+local customWarp = nil
+
+local customWarpName = "WarpBeacon"
+
+local function zeroConvertToWorldCoordinates(pos)
+	local num  = ' *([+-]?%d+%.?%d*e?[+-]?%d*)'
+	local posPattern = '::pos{' .. num .. ',' .. num .. ',' ..  num .. ',' .. num ..  ',' .. num .. '}'
+	local systemId, id, latitude, longitude, altitude = stringmatch(pos, posPattern)
+	if (systemId == "0" and id == "0") then
+		return vec3(tonum(latitude),
+			tonum(longitude),
+			tonum(altitude))
+	end
+	longitude = math.rad(longitude)
+	latitude = math.rad(latitude)
+	local planet = atlas[tonum(systemId)][tonum(id)]
+	local xproj = math.cos(latitude);
+	local planetxyz = vec3(xproj*math.cos(longitude),
+		xproj*math.sin(longitude),
+		math.sin(latitude));
+	local pcenter = {x = planet.center[1], y = planet.center[2], z = planet.center[3]}
+	return pcenter + ((planet.radius + altitude) * planetxyz)
+end
+
+function luaChatEnter(text)
+	local position = zeroConvertToWorldCoordinates(text)
+
+	local button = {id = 66, planet = nill, name = customWarpName, x=100, y=500}
+
+	customWarp = {fullname = customWarpName, name = customWarpName, center = position, mapCoords = {x = position.x/internalScale,y = position.y/internalScale, z = position.z/internalScale}, moons = {}, button = button}
+	for _,screenObject in ipairs(screens) do
+		screenObject.selectedPlanet = nil
+	end
+	update3d(false)
+	updateButtons(false)
+end
 
 function initializeScreen(key, screenUnit)
 	return {
 		screen = screenUnit,
-		id = screenUnit.getId(),
+		id = screenUnit.getLocalId(),
 		slot = key,
 		angle = -1,
 		pitch = 0,
@@ -56,17 +99,13 @@ end
 
 for key, value in pairs(unit) do
 	if type(value) == "table" and type(value.export) == "table" then
-		if value.getElementClass then
-			if value.getElementClass() == "ScreenUnit" then
+		if value.getClass then
+			if value.getClass() == "ScreenUnit" then
 				screens[#screens + 1] = initializeScreen(key, value)
-			elseif value.getElementClass() == "DataBankUnit" then
+			elseif value.getClass() == "DataBankUnit" then
 				databank = value
-			elseif value.getElementClass() == "WarpDriveUnit" then
+			elseif value.getClass() == "WarpDriveUnit" then
 				warpdrive = value
-			elseif value.getElementClass() == "CoreUnitDynamic" then
-				core = value
-			elseif value.getElementClass() == "CoreUnitStatic" then
-				core = value
 			end
 		end
 	end
@@ -281,6 +320,28 @@ addPreset({
 	miniTextColor = "ff0000",
 	warpCostColor = "ff0000"})
 
+-- #10
+addPreset({
+	backGroundColor = "000006",
+	pathColor = "41a1e4",
+	planetOffsetColor = "3a77a2",
+	buttonBorderColor = "0047b2",
+	buttonBorderHoverColor = "4fb6fd",
+	buttonBInactiveColor = "012459",
+	buttonTInactiveColor = "294f89",
+	buttonBActiveColor = "0a5ca1",
+	buttonTActiveColor = "5acbff",
+	buttonTWarpInactiveColor = "1d1dc5",
+	buttonTWarpActiveColor = "1d1dc5",
+	mapCircleColor = "0c3650",
+	mapBCircleColor = "0c3650",
+	mapConstructColor = "A8e6fd",
+	mapConstructSColor = "97d5fc",
+	planetColor = "012459",
+	planetEdgeColor = "0a5ca1",
+	planetNameColor = "294f89",
+	miniTextColor = "0a5ca1",
+	warpCostColor = "0a5ca1"})
 
 
 mapCircleThickness = 0.8 --export: Defines circle thickness. Default: 0.8
@@ -291,7 +352,7 @@ showSafeZone = false --export: Shows or hides safe zone bubble
 
 
 
-local presetButton = {width = buttonHeight, height = buttonHeight, y= buttonSpacing + ((buttonHeight+buttonSpacing+buttonStrokeHalf) * (12 / buttonsPerLine)), x=buttonSpacing, preset = 1}
+local presetButton = {width = buttonHeight, height = buttonHeight, y = buttonSpacing + ((buttonHeight+buttonSpacing+buttonStrokeHalf) * (math.floor(12 / buttonsPerLine) + 1)), x=buttonSpacing, preset = 1}
 
 
 function saveAll()
@@ -300,8 +361,8 @@ function saveAll()
 		for _,screenObject in ipairs(screens) do
 			save(screenObject)
 		end
-		if (core.getConstructMass() / 1000 > 3) then
-			databank.setFloatValue("shipWeight", math.floor(core.getConstructMass() / 1000))
+		if (construct.getMass() / 1000 > 3) then
+			databank.setFloatValue("shipWeight", math.floor(construct.getMass() / 1000))
 		end
 	end
 end
@@ -323,22 +384,11 @@ function split(s, delimiter)
 end
 
 if databank then
-	for _,key in ipairs(json.decode(databank.getKeys())) do
+	for _,key in ipairs(databank.getKeyList()) do
 		value = databank.getFloatValue(key)
-
-		--		if key == "shipWeight" then
-		--			shipWeight = value
-		--		elseif key == "showSafeZone" then
-		--			if value == 1 then
-		--				showSafeZone = true
-		--			else
-		--				showSafeZone = false
-		--			end
-		--		end
 
 		for _,screenObject in ipairs(screens) do
 			if string.match(key, screenObject.slot) then
-
 				splitted = split(key, "_")
 				lastPart = splitted[#splitted]
 
@@ -363,14 +413,12 @@ if databank then
 		shipWeight = math.floor(databank.getFloatValue("shipWeight"))
 	end
 
-
 	if databank.hasKey("warpPreset") then
 		presetButton.preset = databank.getIntValue("warpPreset")
 		if presetButton.preset < 1 then
 			presetButton.preset = 1
 		end
 	end
-
 end
 
 preset =  presets[1]
@@ -418,53 +466,100 @@ table.insert(weightScreenButtons, amountButton)
 
 function getMoonsCount(planet)
 	counter = ""
-	for index in pairs(planet.moons) do
+	if (planet.satellites == nil) then
+		return counter
+	end
+	for index in pairs(planet.satellites) do
+	if index > 5 then
+	return counter
+	end
 		counter = counter.."*"
 	end
 	return counter
 end
 
 function formatPlanetName(planet)
-	return planet.name..getMoonsCount(planet)
+	return planet.name[1]..getMoonsCount(planet)
 end
 
 function mapX(planet)
-	return planet.center.x/400000
+	return planet.center[1]/internalScale
 end
 
 function mapY(planet)
-	return (planet.center.y/400000)
+	return (planet.center[2]/internalScale)
 end
 
 function mapZ(planet)
-	return (planet.center.z)/400000
+	return planet.center[3]/internalScale
 end
 
 planets = {}
 
+---- creating planet button and assingning it to planet object
+--function addPlanetButton(planet)
+--
+--	local x = 0
+--	local y = 0
+--
+--
+--	local line = math.floor(#planets / buttonsPerLine)
+--	local place = #planets % buttonsPerLine
+--
+--	buttonX = buttonSpacing + ((buttonWidth+buttonSpacing+buttonStrokeHalf) * place)
+--	buttonY = buttonSpacing + ((buttonHeight+buttonSpacing+buttonStrokeHalf) * line)
+--
+--	button = {id = #planets + 1, planet = planet, name = formatPlanetName(planet), x=buttonX, y=buttonY}
+--	planet.button = button
+--	planet.mapCoords = {x = mapX(planet),y = mapY(planet), z = mapZ(planet)}
+--	planet.fullname = planet.name
+--	table.insert(planets, planet)
+--end
+
 -- creating planet button and assingning it to planet object
-function addPlanetButton(planet)
+function addPlanets()
 
-	local x = 0
-	local y = 0
+	_planets = {}
+
+	for _,b in pairs(coreAtlas) do
+		if b.systemId == 0 then
+			if b.satellites then
+				table.sort (b.satellites, function (b1, b2) return coreAtlas[b1].positionInSystem < coreAtlas[b1].positionInSystem end )
+			end
+
+			_planets[#_planets+1] = b
+		end
+	end
+	table.sort (_planets, function (b1, b2) return b1.positionInSystem < b2.positionInSystem end )
 
 
-	local line = math.floor(#planets / buttonsPerLine)
-	local place = #planets % buttonsPerLine
+	for _,p in pairs(_planets) do
 
-	buttonX = buttonSpacing + ((buttonWidth+buttonSpacing+buttonStrokeHalf) * place)
-	buttonY = buttonSpacing + ((buttonHeight+buttonSpacing+buttonStrokeHalf) * line)
+		local x = 0
+		local y = 0
 
-	button = {id = #planets + 1, planet = planet, name = formatPlanetName(planet), x=buttonX, y=buttonY}
-	planet.button = button
-	planet.mapCoords = {x = mapX(planet),y = mapY(planet), z = mapZ(planet)}
-	planet.fullname = planet.name
-	table.insert(planets, planet)
+		local line = math.floor(#planets / buttonsPerLine)
+		local place = #planets % buttonsPerLine
+
+		buttonX = buttonSpacing + ((buttonWidth + buttonSpacing + buttonStrokeHalf) * place)
+		buttonY = buttonSpacing + ((buttonHeight + buttonSpacing + buttonStrokeHalf) * line)
+
+		planet = {name = p.name[1], color = "#4d5861", center = vec3(p.center)}
+
+		button = {id = #planets + 1, planet = p, name = formatPlanetName(p), x= buttonX, y= buttonY}
+		planet.button = button
+		planet.satellites = p.satellites
+		planet.icon = p.iconPath
+		planet.mapCoords = {x = mapX(p),y = mapY(p), z = mapZ(p)}
+		planet.fullname = p.name[1]
+		table.insert(planets, planet)
+
+	end
 end
 
 --::pos{0,0,13855453,7385167,-38337}
 --::pos{0,0,13771471,7435803,-128971}
-safeZoneCenter = vec3(13771471 / 400000, 7435803 / 400000, -128971 / 400000)
+safeZoneCenter = vec3(13771471 / internalScale, 7435803 / internalScale, -128971 / internalScale)
 
 --edge = vec3(-2630938.1075 / 400000, 22487.5022 / 400000, -190192.7468 / 400000)
 
@@ -477,86 +572,103 @@ SU100 = 30*2
 
 
 
--- Moons
--- Madis
-local MadisMoon1 = {name = "Moon 1", center = vec3(17448118.224,22966846.286,143078.820), radius = 10000}
-local MadisMoon2 = {name = "Moon 2", center = vec3(17194626.000,22243633.880,-214962.810), radius = 11000}
-local MadisMoon3 = {name = "Moon 3", center = vec3(17520614.000,22184730.000,-309989.990), radius = 15005}
-
--- Alioth
-local AliothMoon1 = {name = "Moon 1", center = vec3(457933.000,-1509011.000,115524.000), radius = 30000}
-local AliothMoon4 = {name = "Moon 4", center = vec3(-1692694.000,729681.000,-411464.000), radius = 30330}
-local Sanctuary = {name = "Sanctuary", center = vec3(-1404835.000,562655.000,-285074.000), radius = 83400}
-
--- Thades
-local ThadesMoon1 = {name = "Moon 1",center = vec3(29214402.000,10907080.695,433858.200), radius = 14002}
-local ThadesMoon2 = {name = "Moon 2",center = vec3(29404193.000,10432768.000,19554.131), radius = 15000}
-
--- Talemai
-local TalemaiMoon1 = {name = "Moon 1",center = vec3(-13058408.000,55781856.000,740177.760), radius = 15000}
-local TalemaiMoon2 = {name = "Moon 2",center = vec3(-13503090.000,55594325.000,769838.640), radius = 12000}
-local TalemaiMoon3 = {name = "Moon 3",center = vec3(-12800515.000,55700259.000,325207.840), radius = 11000}
-
--- Feli
-local FeliMoon1 = {name = "Moon 1",center = vec3(-43902841.780,22261034.700,-48862386.000), radius = 14000}
-
--- Sinnen
-local SinnenMoon1 = {name = "Moon 1",center = vec3(58969616.000,29797945.000,57969449.000), radius = 17000}
-
--- Lacobus
-local LacobusMoon1 = {name = "Moon 1",center = vec3(99180968.000,-13783862.000,-926156.400), radius = 18000}
-local LacobusMoon2 = {name = "Moon 2",center = vec3(99250052.000,-13629215.000,-1059341.400), radius = 14000}
-local LacobusMoon3 = {name = "Moon 3",center = vec3(98905288.170,-13950921.100,-647589.530), radius = 15000}
-
--- Ion
-local IonMoon1 = {name = "Moon 1",center = vec3(2472916.800,-99133747.000,-1133582.800), radius = 11000}
-local IonMoon2 = {name = "Moon 2",center = vec3(2995424.500,-99275010.000,-1378480.700), radius = 15000}
-
+---- Moons
+---- Madis
+--local MadisMoon1 = {id = 10, name = "Moon 1", center = vec3(17448118.224,22966846.286,143078.820), radius = 10000}
+--local MadisMoon2 = {id = 11, name = "Moon 2", center = vec3(17194626.000,22243633.880,-214962.810), radius = 11000}
+--local MadisMoon3 = {id = 12, name = "Moon 3", center = vec3(17520614.000,22184730.000,-309989.990), radius = 15005}
+--
+---- Alioth
+--local AliothMoon1 = {name = "Moon 1", center = vec3(457933.000,-1509011.000,115524.000), radius = 30000}
+--local AliothMoon4 = {name = "Moon 4", center = vec3(-1692694.000,729681.000,-411464.000), radius = 30330}
+--local Sanctuary = {name = "Sanctuary", center = vec3(-1404835.000,562655.000,-285074.000), radius = 83400}
+--local Haven = {name = "Haven", center = vec3(-1205152.02, 1124841.79, -2638867.62), radius = 83443}
+--
+---- Thades
+--local ThadesMoon1 = {name = "Moon 1",center = vec3(29214402.000,10907080.695,433858.200), radius = 14002}
+--local ThadesMoon2 = {name = "Moon 2",center = vec3(29404193.000,10432768.000,19554.131), radius = 15000}
+--
+---- Talemai
+--local TalemaiMoon1 = {name = "Moon 1",center = vec3(-13058408.000,55781856.000,740177.760), radius = 15000}
+--local TalemaiMoon2 = {name = "Moon 2",center = vec3(-13503090.000,55594325.000,769838.640), radius = 12000}
+--local TalemaiMoon3 = {name = "Moon 3",center = vec3(-12800515.000,55700259.000,325207.840), radius = 11000}
+--
+---- Feli
+--local FeliMoon1 = {name = "Moon 1",center = vec3(-43902841.780,22261034.700,-48862386.000), radius = 14000}
+--
+---- Sinnen
+--local SinnenMoon1 = {name = "Moon 1",center = vec3(58969616.000,29797945.000,57969449.000), radius = 17000}
+--
+---- Lacobus
+--local LacobusMoon1 = {name = "Moon 1",center = vec3(99180968.000,-13783862.000,-926156.400), radius = 18000}
+--local LacobusMoon2 = {name = "Moon 2",center = vec3(99250052.000,-13629215.000,-1059341.400), radius = 14000}
+--local LacobusMoon3 = {name = "Moon 3",center = vec3(98905288.170,-13950921.100,-647589.530), radius = 15000}
+--
+---- Ion
+--local IonMoon1 = {name = "Moon 1",center = vec3(2472916.800,-99133747.000,-1133582.800), radius = 11000}
+--local IonMoon2 = {name = "Moon 2",center = vec3(2995424.500,-99275010.000,-1378480.700), radius = 15000}
+--
 -- Planets
-addPlanetButton({name = "Alioth", center = vec3(-8.000, -8.000, -126303.000), radius = 126068, color = "#4d5861", moons = {AliothMoon1, AliothMoon4, Sanctuary}})
-addPlanetButton({name = "Madis", center = vec3(17465536.000, 22665536.000, -34464.000), radius = 44300, color = "#777bbf", moons = {MadisMoon1, MadisMoon2, MadisMoon3}})
-addPlanetButton({name = "Thades", center = vec3(29165536.000, 10865536.000, 65536.000), radius = 49000, color = "#da985f", moons = {ThadesMoon1, ThadesMoon2}})
-addPlanetButton({name = "Ion", center = vec3(2995424.500,-99275010.000,-1378480.700), radius = 44950, color = "#9fc1df", moons = {IonMoon1, IonMoon2}})
-addPlanetButton({name = "Sinnen", center = vec3(58665536.000, 29665536.000, 58165536.000), radius = 54950, color = "#d0885b", moons = {SinnenMoon1}, drawZero = true})
-addPlanetButton({name = "Jago", center = vec3(-94134464.000, 12765536.000, -3634464.000), radius = 61590, color = "#36444f", moons = {}})
-addPlanetButton({name = "Symeon", center = vec3(14165536.000, -85634464.000, -934464.000), radius = 49050, color = "#cad1d9", moons = {}})
-addPlanetButton({name = "Lacobus", center = vec3(98865536.000, -13534464.000, -934464.000), radius = 55650, color = "#deedf9", moons = {LacobusMoon1, LacobusMoon2, LacobusMoon3}})
-addPlanetButton({name = "Teoma", center = vec3(80865536.000, 54665536.000, -934464.000), radius = 62000, color = "#3e5268", moons = {}})
-addPlanetButton({name = "Feli", center = vec3(-43534464.000, 22565536.000, -48934464.000), radius = 60000, color = "#928370", moons = {FeliMoon1}, drawZero = true})
-addPlanetButton({name = "Talemai", center = vec3(-13234464.000, 55765536.000, 465536.000), radius = 57450, color = "#929482", moons = {TalemaiMoon1, TalemaiMoon2, TalemaiMoon3}})
-addPlanetButton({name = "Sicari", center = vec3(52765536.000, 27165536.000, 52065536.000), radius = 51100, color = "#b78a64", moons = {}, drawZero = true})
+--addPlanetButton({id = 2, name = "Alioth", center = vec3(-8.000, -8.000, -126303.000), radius = 126068, color = "#4d5861", moons = {AliothMoon1, AliothMoon4, Sanctuary, Haven}})
+--addPlanetButton({id = 1, name = "Madis", center = vec3(17465536.000, 22665536.000, -34464.000), radius = 44300, color = "#777bbf", moons = {MadisMoon1, MadisMoon2, MadisMoon3}})
+--addPlanetButton({name = "Thades", center = vec3(29165536.000, 10865536.000, 65536.000), radius = 49000, color = "#da985f", moons = {ThadesMoon1, ThadesMoon2}})
+--addPlanetButton({name = "Ion", center = vec3(2995424.500,-99275010.000,-1378480.700), radius = 44950, color = "#9fc1df", moons = {IonMoon1, IonMoon2}})
+--addPlanetButton({name = "Sinnen", center = vec3(58665536.000, 29665536.000, 58165536.000), radius = 54950, color = "#d0885b", moons = {SinnenMoon1}, drawZero = true})
+--addPlanetButton({name = "Jago", center = vec3(-94134464.000, 12765536.000, -3634464.000), radius = 61590, color = "#36444f", moons = {}})
+--addPlanetButton({name = "Symeon", center = vec3(14165536.000, -85634464.000, -934464.000), radius = 49050, color = "#cad1d9", moons = {}})
+--addPlanetButton({name = "Lacobus", center = vec3(98865536.000, -13534464.000, -934464.000), radius = 55650, color = "#deedf9", moons = {LacobusMoon1, LacobusMoon2, LacobusMoon3}})
+--addPlanetButton({name = "Teoma", center = vec3(80865536.000, 54665536.000, -934464.000), radius = 62000, color = "#3e5268", moons = {}})
+--addPlanetButton({name = "Feli", center = vec3(-43534464.000, 22565536.000, -48934464.000), radius = 60000, color = "#928370", moons = {FeliMoon1}, drawZero = true})
+--addPlanetButton({name = "Talemai", center = vec3(-13234464.000, 55765536.000, 465536.000), radius = 57450, color = "#929482", moons = {TalemaiMoon1, TalemaiMoon2, TalemaiMoon3}})
+--addPlanetButton({name = "Sicari", center = vec3(52765536.000, 27165536.000, 52065536.000), radius = 51100, color = "#b78a64", moons = {}, drawZero = true})
 
-
+addPlanets()
 
 buttonLowY = button.y
 
 -- creating moon buttons
 place = 1
+local middle =  screenWidth / 2
+
 for i, planet in ipairs(planets) do
-	if #planet.moons > 0 then
-		shift = 1
-		extraX = -(buttonWidth+buttonSpacing+buttonStrokeHalf)
-		if #planet.moons == 1 then
-			extraX = extraX + (buttonWidth+buttonSpacing+buttonStrokeHalf)
-		elseif #planet.moons == 2 then
-			extraX = extraX + (buttonWidth+buttonSpacing+buttonStrokeHalf) / 2
+	if planet.satellites ~= nil and #planet.satellites > 0 then
+		local shift = 1
+
+		ys = buttonLowY + (buttonHeight + buttonSpacing + buttonStrokeHalf)
+
+		local moons = {}
+
+		for y, moonID in ipairs(planet.satellites) do
+
+			xs =  middle - ((buttonWidth / 2) * #planet.satellites) + ((y-1) * (buttonWidth + buttonSpacing + buttonStrokeHalf) - buttonSpacing)
+
+			if #planet.satellites == 4 then
+				xs = xs - buttonSpacing - buttonStrokeHalf
+			end
+
+			m = coreAtlas[moonID]
+
+			if m.type[0] ~= "Asteroid" then
+				local moon = {name = m.name[1]:gsub(planet.name, ""), center =vec3( m.center), radius = m.radius}
+
+				local button = {id = y, planet = moon, name = planet.name.." "..moon.name,  y=ys, x=xs}
+				moon.button = button
+				moon.sourcePlanet = planet
+				moon.mapCoords = {x = mapX(m),y = mapY(m), z = mapZ(m)}
+				moon.fullname = planet.fullname.." "..moon.name
+
+				moon.icon = m.iconPath
+
+				moons[y] = moon
+
+				shift = shift + 1
+			end
 		end
-		for y, moon in ipairs(planet.moons) do
-			ys = buttonLowY+(buttonHeight+buttonSpacing+buttonStrokeHalf)
 
-			middle =	screenWidth / 2
+		planet.moons = moons
+	else
+		planet.moons = {}
 
-			xs =  middle - ((buttonWidth / 2) * #planet.moons) + ((y-1) * (buttonWidth+buttonSpacing+buttonStrokeHalf)-buttonSpacing)
-
-			--			xs = 10 + (shift * (buttonWidth+buttonSpacing+buttonStrokeHalf)) + extraX
-
-			local button = {id = y, planet = moon, name = planet.name.." "..moon.name,  y=ys, x=xs}
-			moon.button = button
-			moon.sourcePlanet = planet
-			moon.mapCoords = {x = mapX(moon),y = mapY(moon), z = mapZ(moon)}
-			moon.fullname = planet.fullname.." "..moon.name
-			shift = shift + 1
-		end
 	end
 end
 
@@ -652,7 +764,7 @@ function getRoute(toPlanet)
 
 
 
-	local newDistance = 400000
+	local newDistance = internalScale
 	local endPlanets = {}
 
 	for i, primaryPlanet in ipairs(primary) do
@@ -710,24 +822,30 @@ function update(auto)
 	end
 end
 
-function getConstructMass()
-	return math.ceil(core.getConstructMass() / 1000)
+function getMass()
+	return math.ceil(construct.getMass() / 1000)
 end
 
 function getBoardedShipsMass()
 	local dockedMass = 0
-	local constructIds = core.getDockedConstructs()
+	local constructIds = construct.getDockedConstructs()
 	for i, cid in ipairs(constructIds) do
-		dockedMass = dockedMass + math.ceil(core.getDockedConstructMass(cid) / 1000)
+		dockedMass = dockedMass + math.ceil(construct.getDockedConstructMass(cid) / 1000)
 	end
 	return dockedMass
 end
 
 function getBoardedPlayerMass()
 	local dockedMass = 0
-	local playerIds = core.getPlayersOnBoard()
+	local playerIds = construct.getPlayersOnBoard()
 	for i, pid in ipairs(playerIds) do
-		dockedMass = dockedMass + math.ceil(core.getBoardedPlayerMass(pid) / 1000)
+
+
+		local ms = math.ceil(construct.getBoardedPlayerMass(pid) / 1000)
+
+		if ms > 20 then
+			dockedMass = dockedMass + (ms - 20)
+		end
 	end
 	return dockedMass
 end
@@ -743,7 +861,7 @@ function updateButtons(auto)
 	updateCounter = 0
 
 	if warpdrive then
-		local decoded = json.decode(warpdrive.getData())
+		local decoded = json.decode(warpdrive.getWidgetData())
 		local warpDriveDestination = decoded.destination
 
 		if warpDriveDestination == "Sanctuary" then
@@ -751,33 +869,39 @@ function updateButtons(auto)
 		end
 
 		if warpDriveDestinationPlanet == nill or warpDriveDestinationPlanet.fullname ~= warpDriveDestination then
-
-
 			warpDriveDestinationPlanet = planetByName(warpDriveDestination)
-
-
 			if warpDriveDestinationPlanet ~= nill then
-
 				for _,screenObject in ipairs(screens) do
 					screenObject.selectedPlanet = warpDriveDestinationPlanet
 				end
+			else
+				if customWarp ~= nil then
+					warpDriveDestinationPlanet = customWarp
+				end
 			end
 		end
-		warpDriveMath = tonumber(Split(decoded.cellCount, " / ")[2])
-		warpDriveCells =  tonumber(Split(decoded.cellCount, " / ")[1])
+
+		if decoded.destination ~= "Unknown" then
+			warpDriveMath = tonumber(Split(decoded.cellCount, " / ")[2])
+			warpDriveCells =  tonumber(Split(decoded.cellCount, " / ")[1])
+		else
+			warpDriveMath = nil
+			warpDriveCells = nil
+		end
 	end
 
-	if core then
-		shipVelocity = vec3(core.getVelocity()):len() * 3.6
-	end
+	shipVelocity = vec3(construct.getVelocity()):len() * 3.6
 
 	boardedWeight = getBoardedShipsMass() + getBoardedPlayerMass()
 
-	constructWeight = getConstructMass() + boardedWeight
+	constructWeight = getMass()
 
 	if constructWeight < 2 and shipWeight > 2 then
 		constructWeight = shipWeight
+	else
+		constructWeight = getMass() + boardedWeight
 	end
+
 
 	for _,screenObject in ipairs(screens) do
 
@@ -802,30 +926,23 @@ function updateButtons(auto)
 			screenObject.route = {selectedPlanet}
 		end
 
-		if core then
-			--			aepx = 0.0002466
-			aepx = 0.00025
-			if warpDriveMath ~=nill and screenObject.selectedPlanet == warpDriveDestinationPlanet then
-				warpmath = warpDriveMath
-				warpmathBack = math.floor((screenObject.extraWeight)  *  calculatedDist * aepx)
-				warpmathBack = warpmath + warpmathBack
-			else
-
-
-
-				--24.5 = 1000 * (100-2) * 0.00025
-				-- (100-2) = 24.5 / 1000 / 0.00025
-
-				warpmath = math.floor((constructWeight)  *  (calculatedDist-2) * aepx)
-				warpmathBack = math.floor((constructWeight+screenObject.extraWeight)  *  (calculatedDist-2) * aepx)
-			end
-			if constructWeight+screenObject.extraWeight < 0 then
-				screenObject.extraWeight = -constructWeight
-			end
+		--			aepx = 0.0002466
+		aepx = 0.00025
+		if warpDriveMath ~=nill and (screenObject.selectedPlanet == warpDriveDestinationPlanet or screenObject.selectedPlanet == customWarp) then
+			warpmath = warpDriveMath
+			warpmathBack = math.floor((screenObject.extraWeight)  *  calculatedDist * aepx)
+			warpmathBack = warpmath + warpmathBack
 		else
-			warpmath = 0
-			warpmathBack = 0
+			--24.5 = 1000 * (100-2) * 0.00025
+			-- (100-2) = 24.5 / 1000 / 0.00025
+
+			warpmath = math.floor((constructWeight)  *  (calculatedDist-2) * aepx)
+			warpmathBack = math.floor((constructWeight+screenObject.extraWeight)  *  (calculatedDist-2) * aepx)
 		end
+		if constructWeight+screenObject.extraWeight < 0 then
+			screenObject.extraWeight = -constructWeight
+		end
+
 
 
 		if warpmath < 1 then
@@ -838,7 +955,8 @@ function updateButtons(auto)
 
 		approxSpeed = ""
 		predictedSpeed = shipVelocity
-		if shipVelocity <= 100 then
+
+		if shipVelocity <= 10 then
 			approxSpeed = "*"
 			if calculatedDist < 3 then
 				predictedSpeed = 8000
@@ -853,14 +971,8 @@ function updateButtons(auto)
 
 		shipVelocityFormat = string.format("%.0f", predictedSpeed)
 
-
-
-
 		lessWarpDistance = (warpmath - 1) / constructWeight / aepx
 		lessWarpWeight = (warpmath - 1) / (calculatedDist-2) / aepx
-
-
-
 
 		time_to_distance = string.format("%.2f", calculatedDist * 200 / ( predictedSpeed ) * 60)
 		dist = string.format("%.0f", calculatedDist * 200)
@@ -897,6 +1009,11 @@ function updateButtons(auto)
 				end
 
 				html = html..[[<rect rx="0" height="]]..buttonHeight..[[" width="]]..buttonWidth..[[" y="]]..planet.button.y..[[" x="]]..planet.button.x..[[" stroke-width="]]..buttonStroke..[[" stroke="#]]..borderColor..[[" fill="#]]..backColor..[["/>]]
+
+				--				html = html..[[<image xlink:href="]]..planet.icon..[[" height="32" width="32"  y="]]..(planet.button.y+3)..[[" x="]]..(planet.button.x+3)..[["/>]]
+				--				html = html..[[<text class="btext" y="]]..(planet.button.y+(buttonHeight/2)+15-buttonStroke*2)..[[" x="]]..(planet.button.x+10+32)..[[" fill="#]]..textColor..[[">]]..planet.button.name..[[</text>]]
+
+
 				html = html..[[<text class="btext" y="]]..(planet.button.y+(buttonHeight/2)+15-buttonStroke*2)..[[" x="]]..(planet.button.x+10)..[[" fill="#]]..textColor..[[">]]..planet.button.name..[[</text>]]
 				html = html..[[<text class="bdtext" y="]]..(planet.button.y+(buttonHeight/2)+15-buttonStroke*2)..[[" x="]]..(planet.button.x-10+buttonWidth)..[[" fill="#]]..textColor..[[">]]..string.format("%.1f", distanceToPlanet)..[[</text>]]
 			end
@@ -1119,9 +1236,9 @@ end
 
 function updateScreen3d(screenObject, auto)
 
-	globalLoc = vec3(core.getConstructWorldPos())
+	globalLoc = vec3(construct.getWorldPosition())
 	--   globalLoc = vec3(-94134464.000, 12765536.000, -3634464.000)
-	constructLoc  = {x = globalLoc.x/400000, y = (globalLoc.y/400000), z = globalLoc.z/400000}
+	constructLoc  = {x = globalLoc.x/internalScale, y = (globalLoc.y/internalScale), z = globalLoc.z/internalScale}
 
 	updateSC3d(screenObject, auto)
 
@@ -1129,9 +1246,9 @@ end
 
 function update3d(auto)
 
-	globalLoc = vec3(core.getConstructWorldPos())
+	globalLoc = vec3(construct.getWorldPosition())
 	--   globalLoc = vec3(-94134464.000, 12765536.000, -3634464.000)
-	constructLoc  = {x = globalLoc.x/400000, y = (globalLoc.y/400000), z = globalLoc.z/400000}
+	constructLoc  = {x = globalLoc.x/internalScale, y = (globalLoc.y/internalScale), z = globalLoc.z/internalScale}
 
 	for _,screenObject in ipairs(screens) do
 		updateSC3d(screenObject, auto)
@@ -1218,10 +1335,6 @@ function updateSC3d(screenObject, auto)
 
 		r = 10 - point.z/50
 		font = 6 - (0.8 * (point.z/10 + mapSize*(screenObject.scale+1)) / distance)
-
-		--    if planet.name == "Symeon" then
-		--      system.print(point.z.." "..r.." "..screenObject.scale.. "  ".. font)
-		--    end
 
 		if r < 5 then
 			r = 5
@@ -1312,14 +1425,13 @@ function updateSC3d(screenObject, auto)
 				originPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, previousPoint)
 				distinationPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, planet.mapCoords)
 
-				dashArray = "40 10 30 10 20 10"
+				dashArray = "10 10"
 				if screenObject.timer > 2 then
 					screenObject.timer = 0
 				end
 				screenObject.timer = screenObject.timer + 1
 
 				html = html..[[<line stroke-linecap="undefined" stroke-linejoin="undefined" animation="dash 5s linear" stroke-dasharray="]]..dashArray..[[" y2="]]..toScreenCordsY(distinationPoint.y)..[[%" x2="]]..toScreenCordsX(distinationPoint.x)..[[%" y1="]]..toScreenCordsY(originPoint.y)..[[%" x1="]]..toScreenCordsX(originPoint.x)..[[%" stroke-opacity="0.9" stroke-width="5" stroke="#]]..preset.pathColor..[[" fill="none" fill-opacity="0"/>]]
-
 			end
 			previousPoint = planet.mapCoords
 		end
@@ -1354,6 +1466,15 @@ function updateSC3d(screenObject, auto)
 		end
 	end
 
+
+
+
+	-- Custom warp beacon point on screen
+	if screenObject.selectedPlanet ~= nil and screenObject.selectedPlanet.name == customWarpName then
+		constructPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, screenObject.selectedPlanet.mapCoords)
+		html = html..[[<circle cx="]]..(toScreenCordsX(constructPoint.x))..[[%" cy="]]..(toScreenCordsY(constructPoint.y))..[[%" r="]]..toScreenCords(constructPoint.r/2)..[[%" class="circle" style="fill:#]]..preset.mapConstructColor..[[; stroke: ]]..preset.mapConstructSColor..[[; stroke-opacity: 0.5; fill-opacity: 1"></circle>]]
+	end
+
 	constructPoint = getPointOnMap(rotationX, rotationY, rotationZ, screenObject, constructLoc)
 	html = html..[[<circle cx="]]..(toScreenCordsX(constructPoint.x))..[[%" cy="]]..(toScreenCordsY(constructPoint.y))..[[%" r="]]..toScreenCords(constructPoint.r)..[[%" class="circle" style="fill:#]]..preset.mapConstructColor..[[; stroke: ]]..preset.mapConstructSColor..[[; stroke-opacity: 0.5; fill-opacity: 1"></circle>]]
 
@@ -1367,7 +1488,7 @@ end
 
 function evaluateButtons(x, y, pressDown, screen)
 	for _,screenObject in ipairs(screens) do
-		if  screenObject.screen.getId() == screen.getId() then
+		if  screenObject.screen.getLocalId() == screen.getLocalId() then
 
 			screenObject.mouseDown = pressDown
 
@@ -1755,4 +1876,4 @@ update3d(false)
 updateButtons(false)
 unit.setTimer("spacemap", updateInterval)
 unit.setTimer("hoverdetect", 1)
-unit.hide()
+unit.hideWidget()
